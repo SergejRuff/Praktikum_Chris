@@ -1,28 +1,40 @@
 # clean global enviroment
 rm(list=ls())
 
+###########
 # packages
+###########
+
 library(traits)
 library(seqinr)
 library(ORFik)
 library(gt)
 
+##########
+# Import
+###########
 
+fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_roniviruses_n6.fasta"
 current_date <- Sys.Date()
 # Import from local files
-sequences <- read.fasta(file="A:/Praktikum_Chris/data/Covid_ref/sequence.fasta",as.string=TRUE)
+
+sequences <- read.fasta(file=fasta_files,as.string=TRUE)
+
+##############
+# preprocessing
+###############
 
 # extract specific fasta file from list
-sequences <- sequences[[1]]
+sequence_ <- sequences[[1]]
 
 # extract the nucleotide sequence
-seq <- sequences[1]
+seq <- sequence_[1]
 
 # get name of taxa
-NameofTaxon <- getAnnot(sequences)
+NameofTaxon <- getName(sequence_)
 
 # find the ORFs in + direction with length of 300 or more. Using ORFik-package
-orfs<- findORFs(seq, minimumLength = 98)
+orfs<- findORFs(seq, minimumLength = 98)      # !!!!!!!! might need to change length later
 
 
 # Convert the Data to a data frame
@@ -44,8 +56,9 @@ five_UTR <- toupper(five_UTR)
 
 three_UTR <- toupper(three_UTR)
 
-
+#########
 # export
+#########
 
 basedirectory <- "A:/Praktikum_Chris/output"
 folder_name <- paste0("fasta_files_",Sys.Date())
@@ -57,13 +70,15 @@ if (!dir.exists(folder_path)) {
 
 setwd(folder_path)
 
-write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT",current_date,".fasta"))
+write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
 
-write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT",current_date,".fasta"))
+write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
 
 setwd("A:/Praktikum_Chris/R/code")
 
+###################
 # print-statements
+###################
 
 cat(paste("for virus",NameofTaxon))
 print(orfs)
