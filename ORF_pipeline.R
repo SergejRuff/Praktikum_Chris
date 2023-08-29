@@ -5,7 +5,8 @@ rm(list=ls())
 library(traits)
 library(seqinr)
 library(ORFik)
-library(dplyr)
+library(gt)
+
 
 # Import from local files
 sequences <- read.fasta(file="A:/Praktikum_Chris/data/Covid_ref/sequence.fasta",as.string=TRUE)
@@ -16,10 +17,12 @@ sequences <- sequences[[1]]
 # extract the nucleotide sequence
 seq <- sequences[1]
 
+# get name of taxa
+NameofTaxon <- getAnnot(sequences)
+
 # find the ORFs in + direction with length of 300 or more. Using ORFik-package
 orfs<- findORFs(seq, minimumLength = 98)
 
-print(orfs)
 
 # Convert the Data to a data frame
 orf_df <- as.data.frame(orfs@unlistData)
@@ -30,9 +33,24 @@ firstposition <- min(orf_df$start)-1
 # extract first position of 3´-UTR
 lastposition <- max(orf_df$end)+1
 
-cat(paste("5´-UTR goes from position 1-", firstposition,
-            "\n3´-UTR starts at position:", lastposition,
-            "and ends with the last nucleotide"))
+
+cat(paste("for virus",NameofTaxon))
+print(orfs)
+
+# Create a data frame with the information
+data <- data.frame(
+  "UTRs" = c("5´-UTR Position", "3´-UTR Position"),
+  "position" = c(paste("1-",firstposition), paste(lastposition,"-",nchar(seq))),
+  "length"= c(firstposition,nchar(seq)-lastposition+1)
+)
+
+# Create a gt table
+table <- gt(data)%>%
+  tab_header(title ="UTR Positions and Lengths ",
+             subtitle=md(paste("**virus**: ",NameofTaxon)))%>%
+  opt_align_table_header(align="left")
+
+print(table)
 
 
 # extract 5´- and 3´-UTR
@@ -43,5 +61,7 @@ three_UTR <- substring(seq, first =lastposition )
 five_UTR <- toupper(five_UTR)
 
 three_UTR <- toupper(three_UTR)
+
+
 
 
