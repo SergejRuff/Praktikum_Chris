@@ -10,7 +10,7 @@ library(seqinr)
 library(ORFik)
 library(gt)
 library(webshot2)
-
+library(LncFinder)
 ##########
 # Import
 ###########
@@ -91,13 +91,13 @@ for (i in 1:length(sequences)){
 
   basedirectory <- "A:/Praktikum_Chris/output"
   folder_name <- paste0("fasta_files_",Sys.Date())
-  folder_path <- file.path(basedirectory, folder_name)
+  folder_path_ <- file.path(basedirectory, folder_name)
 
-  if (!dir.exists(folder_path)) {
-    dir.create(folder_path, recursive = TRUE)
+  if (!dir.exists(folder_path_)) {
+    dir.create(folder_path_, recursive = TRUE)
   }
 
-  folder_path <- file.path(folder_path, NameofTaxon)
+  folder_path <- file.path(folder_path_, NameofTaxon)
 
   if (!dir.exists(folder_path)) {
     dir.create(folder_path, recursive = TRUE)
@@ -112,9 +112,32 @@ for (i in 1:length(sequences)){
 
   gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
 
+
+  folder_path2 <- file.path(folder_path_, "Alle_FASTAFiles")
+
+  if (!dir.exists(folder_path2)) {
+    dir.create(folder_path2, recursive = TRUE)
+  }
+
+  setwd(folder_path2)
+
+  write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+
+  write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+
   setwd("A:/Praktikum_Chris/R/code")
 
 
 
 
 }
+
+
+
+fasta_files <- "A:/Praktikum_Chris/output/fasta_files_2023-08-29/Alle_FASTAFiles/5_URT_NC_010306.1_Gill-associated_virus2023-08-29.fasta"
+
+sequences <- read.fasta(file=fasta_files,as.string=TRUE)
+
+
+test <- run_RNAfold(sequences,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe")
+
