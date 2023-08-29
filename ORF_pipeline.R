@@ -8,6 +8,7 @@ library(ORFik)
 library(gt)
 
 
+current_date <- Sys.Date()
 # Import from local files
 sequences <- read.fasta(file="A:/Praktikum_Chris/data/Covid_ref/sequence.fasta",as.string=TRUE)
 
@@ -34,6 +35,36 @@ firstposition <- min(orf_df$start)-1
 lastposition <- max(orf_df$end)+1
 
 
+# extract 5´- and 3´-UTR
+five_UTR <- substring(seq, first = 1, last=firstposition)
+three_UTR <- substring(seq, first =lastposition )
+
+#RNAstructure requires nucleotides to be upper case
+five_UTR <- toupper(five_UTR)
+
+three_UTR <- toupper(three_UTR)
+
+
+# export
+
+basedirectory <- "A:/Praktikum_Chris/output"
+folder_name <- paste0("fasta_files_",Sys.Date())
+folder_path <- file.path(basedirectory, folder_name)
+
+if (!dir.exists(folder_path)) {
+  dir.create(folder_path, recursive = TRUE)
+}
+
+setwd(folder_path)
+
+write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT",current_date,".fasta"))
+
+write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT",current_date,".fasta"))
+
+setwd("A:/Praktikum_Chris/R/code")
+
+# print-statements
+
 cat(paste("for virus",NameofTaxon))
 print(orfs)
 
@@ -51,17 +82,4 @@ table <- gt(data)%>%
   opt_align_table_header(align="left")
 
 print(table)
-
-
-# extract 5´- and 3´-UTR
-five_UTR <- substring(seq, first = 1, last=firstposition)
-three_UTR <- substring(seq, first =lastposition )
-
-#RNAstructure requires nucleotides to be upper case
-five_UTR <- toupper(five_UTR)
-
-three_UTR <- toupper(three_UTR)
-
-
-
 
