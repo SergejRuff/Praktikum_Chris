@@ -40,7 +40,7 @@ for (i in 1:length(sequences)){
   NameofTaxon <- getName(sequence_)
 
   # find the ORFs in + direction with length of 300 or more. Using ORFik-package
-  orfs<- findORFs(seq, minimumLength = 98,startCodon = "ATG")      # !!!!!!!! might need to change length later.
+  orfs<- findORFs(seq, minimumLength = 98,startCodon = "ATG")      # !!!!!!!! might need to change length later. 248 for 750
                                                                    # !!!! Startcodon changes results. Default uses alternative codons as well.
 
 
