@@ -71,6 +71,13 @@ for (i in 1:length(sequences)){
     dir.create(folder_path, recursive = TRUE)
   }
 
+  folder_path <- file.path(folder_path, NameofTaxon)
+
+  if (!dir.exists(folder_path)) {
+    dir.create(folder_path, recursive = TRUE)
+  }
+
+
   setwd(folder_path)
 
   write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
