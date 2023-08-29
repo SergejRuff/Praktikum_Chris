@@ -9,6 +9,7 @@ library(traits)
 library(seqinr)
 library(ORFik)
 library(gt)
+library(webshot2)
 
 ##########
 # Import
@@ -59,6 +60,28 @@ for (i in 1:length(sequences)){
 
   three_UTR <- toupper(three_UTR)
 
+  ###################
+  # print-statements
+  ###################
+
+  cat(paste("for virus",NameofTaxon))
+  print(orfs)
+
+  # Create a data frame with the information
+  data <- data.frame(
+    "UTRs" = c("5´-UTR Position", "3´-UTR Position"),
+    "position" = c(paste("1-",firstposition), paste(lastposition,"-",nchar(seq))),
+    "length"= c(firstposition,nchar(seq)-lastposition+1)
+  )
+
+  # Create a gt table
+  table <- gt(data)%>%
+    tab_header(title ="UTR Positions and Lengths ",
+               subtitle=md(paste("**virus**: ",NameofTaxon)))%>%
+    opt_align_table_header(align="left")
+
+  print(table)
+
   #########
   # export
   #########
@@ -84,29 +107,11 @@ for (i in 1:length(sequences)){
 
   write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
 
+  gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
+
   setwd("A:/Praktikum_Chris/R/code")
 
-  ###################
-  # print-statements
-  ###################
 
-  cat(paste("for virus",NameofTaxon))
-  print(orfs)
-
-  # Create a data frame with the information
-  data <- data.frame(
-    "UTRs" = c("5´-UTR Position", "3´-UTR Position"),
-    "position" = c(paste("1-",firstposition), paste(lastposition,"-",nchar(seq))),
-    "length"= c(firstposition,nchar(seq)-lastposition+1)
-  )
-
-  # Create a gt table
-  table <- gt(data)%>%
-    tab_header(title ="UTR Positions and Lengths ",
-               subtitle=md(paste("**virus**: ",NameofTaxon)))%>%
-    opt_align_table_header(align="left")
-
-  print(table)
 
 
 }
