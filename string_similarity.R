@@ -27,3 +27,4 @@ max_length <- max(nchar(sequence_1), nchar(sequence_2))
 lev_distance_percentage <- (lev_distance / max_length) * 100
 
 cat("Levenshtein Distance Percentage:", lev_distance_percentage, "%\n")
+# what percentage of dots and points needs to be changed in the longer sequence to match teh short sequence.
