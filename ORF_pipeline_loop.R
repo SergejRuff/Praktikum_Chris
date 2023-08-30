@@ -181,9 +181,16 @@ for (i in 1:length(results_list)){
   CT_name <- paste0(cT_path,"/",virus_nam,".ct")
 
   # save files as Connectivity table format using ncRNAtools´ writeCT-function
-  writeCT(filename=CT_name,sequence=results_list[[i]][1,],secondaryStructure = results_list[[i]][2,])
+  writeCT(filename=CT_name,sequence=results_list[[i]][1,],secondaryStructure = results_list[[i]][2,],sequenceName = virus_nam)
 
 }
+
+
+#################################################################################
+
+# compare dot-bracket annotation to each other.
+
+
 
 
 
