@@ -132,12 +132,29 @@ for (i in 1:length(sequences)){
 
 }
 
+##############################################################################
+########### Run RNA Fold #####################################################
+##############################################################################
+
+fasta_files <- list.files(path=folder_path2,pattern="*.fasta",full.names = TRUE)
+
+results_list <- list()  # Create an empty list to store the results
+
+for (i in 1:length(fasta_files)){
+
+  sequences2 <- read.fasta(file=fasta_files[i],as.string=TRUE)
+
+  name_virus <- getAnnot(sequences2)
+
+  print(paste("performing RNAfold for virus:",name_virus))
+
+  results <- run_RNAfold(sequences2,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe",parallel.cores = -1 )
+
+  results_list[[i]] <- results
+
+  names(results_list)[i]<- name_virus
+}
 
 
-fasta_files <- "A:/Praktikum_Chris/output/fasta_files_2023-08-29/Alle_FASTAFiles/5_URT_NC_010306.1_Gill-associated_virus2023-08-29.fasta"
 
-sequences <- read.fasta(file=fasta_files,as.string=TRUE)
-
-
-test <- run_RNAfold(sequences,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe")
 
