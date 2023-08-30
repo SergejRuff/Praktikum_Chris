@@ -12,6 +12,7 @@ library(gt)
 library(webshot2)
 library(LncFinder)
 library(ncRNAtools)
+library(R2easyR)
 
 ##########
 # Import
