@@ -11,6 +11,8 @@ library(ORFik)
 library(gt)
 library(webshot2)
 library(LncFinder)
+library(ncRNAtools)
+
 ##########
 # Import
 ###########
@@ -142,19 +144,45 @@ results_list <- list()  # Create an empty list to store the results
 
 for (i in 1:length(fasta_files)){
 
-  sequences2 <- read.fasta(file=fasta_files[i],as.string=TRUE)
 
-  name_virus <- getAnnot(sequences2)
+  sequences2 <- read.fasta(file=fasta_files[i],as.string=TRUE) # import 5 and 3UTR files in directory
+
+  name_virus <- getAnnot(sequences2) # get virus_name
 
   print(paste("performing RNAfold for virus:",name_virus))
 
-  results <- run_RNAfold(sequences2,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe",parallel.cores = -1 )
+  results <- run_RNAfold(sequences2,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe",parallel.cores = -1 ) # perform RNAfold
 
-  results_list[[i]] <- results
+  results_list[[i]] <- results # save results into a list. dataframes containing sequence, dot bracket notation and energy.
 
   names(results_list)[i]<- name_virus
 }
 
+
+# Export as CT-file
+
+
+for (i in 1:length(results_list)){
+
+  # creat a CT-results folder if not already created
+  CT_folder <- "CT_Fold_Ergebnisse"
+  cT_path <- file.path(folder_path_, CT_folder)
+
+  if (!dir.exists(cT_path)) {
+    dir.create(cT_path, recursive = TRUE)
+  }
+
+  # extract name of virus from results_list
+  virus_nam <-names(results_list)[i]
+
+  # remove > otherwise file can´t be created
+  virus_nam <- sub("^>", "", virus_nam )
+  CT_name <- paste0(cT_path,"/",virus_nam,".ct")
+
+  # save files as Connectivity table format using ncRNAtools´ writeCT-function
+  writeCT(filename=CT_name,sequence=results_list[[i]][1,],secondaryStructure = results_list[[i]][2,])
+
+}
 
 
 
