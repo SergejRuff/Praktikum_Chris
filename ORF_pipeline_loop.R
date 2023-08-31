@@ -232,21 +232,5 @@ for (file in ctUTR_files){
 }
 
 
-RNAstrCluster(threeUTR_list)
-
-
-
-RNAstrCluster(fiveUTR_list)
-
-for (i in 1:length(fiveUTR_list)){
-  ct_circle <- RNAcirPlot (fiveUTR_list[[i]],cex=0.6)
-  print(ct_circle)
-}
-
-
-#for (i in 1:length(threeUTR_list)){
-#  ct_circle3 <- RNAcirPlot (threeUTR_list[[i]],cex=0.6)
-#  print(ct_circle3)
-#}
 
 
