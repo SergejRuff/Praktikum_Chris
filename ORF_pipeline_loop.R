@@ -243,5 +243,9 @@ for (i in 1:length(fiveUTR_list)){
   print(ct_circle)
 }
 
-RNAcirPlot (fiveUTR_list[[1]])
+for (i in 1:length(threeUTR_list)){
+  ct_circle3 <- RNAcirPlot (threeUTR_list[[i]],cex=0.6)
+  print(ct_circle3)
+}
 
+strComparePlot(threeUTR_list[[4]],threeUTR_list[[5]])

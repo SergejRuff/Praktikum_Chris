@@ -1,0 +1,57 @@
+library(gridExtra)
+library(cowplot)
+library(magick)
+library(patchwork)
+library(ggplot2)
+
+# Path to the directory containing plots
+plots_directory <- paste0(folder_path_,"/","plots")
+
+# List of plot file names
+plot_files <- list.files(plots_directory, pattern = "\\.png$", full.names = TRUE)
+
+# Separate plot files into those containing "3_UTR" and "5_UTR"
+utr3_plot_files <- plot_files[grep("3_UTR", plot_files)]
+utr5_plot_files <- plot_files[grep("5_UTR", plot_files)]
+
+# Function to import and create a plot for a list of files
+import_and_plot <- function(files) {
+  plots <- list()
+  for (file in files) {
+    plots[[basename(file)]] <- ggdraw() + draw_image(image_read(file))
+  }
+  return(plots)
+}
+
+# Import and plot "3_UTR" images
+imported_plots_utr3 <- import_and_plot(utr3_plot_files)
+plots_list_utr3 <- lapply(names(imported_plots_utr3), function(title) {
+  plot = imported_plots_utr3[[title]]
+  title2 <- gsub("\\.png$", "", title)
+  plot + ggtitle(title2) + theme(plot.title = element_text(size = 10, hjust = 0.5))
+})
+
+# Import and plot "5_UTR" images
+imported_plots_utr5 <- import_and_plot(utr5_plot_files)
+plots_list_utr5 <- lapply(names(imported_plots_utr5), function(title) {
+  plot = imported_plots_utr5[[title]]
+  title2 <- gsub("\\.png$", "", title)
+  plot + ggtitle(title2) + theme(plot.title = element_text(size = 10, hjust = 0.5))
+})
+
+# Combine plots using patchwork for "3_UTR" images
+combined_plot_utr3 <- wrap_plots(plots = plots_list_utr3, ncol = 1)
+
+# Combine plots using patchwork for "5_UTR" images
+combined_plot_utr5 <- wrap_plots(plots = plots_list_utr5, ncol = 1)
+
+# Display the combined plots
+print(combined_plot_utr3)
+print(combined_plot_utr5)
+
+setwd(plots_directory)
+
+# Export plots as PDF files
+ggsave("combined_plot_utr3.pdf", combined_plot_utr3, width = 8, height = 10)
+ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10)
+setwd("A:/Praktikum_Chris/R/code")
