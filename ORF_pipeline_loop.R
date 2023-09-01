@@ -569,3 +569,7 @@ write.csv(lev_distance_percentage_matrix_5UTR, file = paste0(folder_path_,"/alli
 write.csv(lev_distance_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_3UTR.csv"))
 # Write the matrix to a CSV file
 write.csv(lev_distance_percentage_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
+
+
+
+
