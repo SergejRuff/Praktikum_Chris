@@ -320,8 +320,8 @@ print(combined_plot_utr5)
 setwd(plots_directory)
 
 # Export plots as PDF files
-ggsave("combined_plot_utr3.pdf", combined_plot_utr3, width = 8, height = 10)
-ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10)
+ggsave("combined_plot_utr3.pdf", combined_plot_utr3, width = 8, height = 10,dpi=320)
+ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10,dpi=320)
 
 # set path back to code directory
 setwd("A:/Praktikum_Chris/R/code")
