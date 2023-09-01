@@ -30,6 +30,8 @@ current_date <- Sys.Date()
 
 sequences <- read.fasta(file=fasta_files,as.string=TRUE)
 
+all_data <- list()
+
 
 for (i in 1:length(sequences)){
 
@@ -92,7 +94,18 @@ for (i in 1:length(sequences)){
                subtitle=md(paste("**virus**: ",NameofTaxon)))%>%
     opt_align_table_header(align="left")
 
-  print(table) # print info about chosen ORFs
+  # Create a data frame with the information for this run
+  data <- data.frame(
+    "Virus" = NameofTaxon,
+    "UTRs" = c("5´-UTR Position", "3´-UTR Position"),
+    "position" = c(paste("1-",firstposition), paste(lastposition,"-",nchar(seq))),
+    "length"= c(firstposition, nchar(seq) - lastposition + 1)
+  )
+
+  # Add the data frame to the list
+  all_data[[i]] <- data
+
+  #print(table) # print info about chosen ORFs
 
   #########
   # export
@@ -146,6 +159,19 @@ for (i in 1:length(sequences)){
 
 
 }
+
+# Combine all data frames into one
+combined_data <- do.call(rbind, all_data)
+
+# Create a gt table using the combined data
+combined_table <- gt(combined_data) %>%
+  tab_header(title = "UTR Positions and Lengths") %>%
+  opt_align_table_header(align = "left")
+
+# Print the combined table
+print(combined_table)
+
+gtsave(data=combined_table,filename ="table_Gesamt.pdf",path=folder_path_)
 
 ##############################################################################
 ########### Run RNA Fold #####################################################
@@ -299,6 +325,9 @@ ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10)
 
 # set path back to code directory
 setwd("A:/Praktikum_Chris/R/code")
+
+
+
 
 
 
