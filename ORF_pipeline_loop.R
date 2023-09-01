@@ -451,6 +451,7 @@ if (!dir.exists(scores_path)) {
   dir.create(scores_path, recursive = TRUE)
 }
 
+
 # Write the matrix to a CSV file
 write.csv(alignment_scores_local_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
 
@@ -461,3 +462,90 @@ write.csv(alignment_scores_global_3UTR, file = paste0(folder_path_,"/allignments
 write.csv(alignment_scores_local_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
 # Write the matrix to a CSV file
 write.csv(alignment_scores_global_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
+
+
+
+######################
+# Perform Levenstein #
+######################
+
+
+# Initialize matrices
+n <- length(list_gt3_UTR)
+lev_distance_matrix_3UTR <- matrix(0, n, n)
+lev_distance_percentage_matrix_3UTR <- matrix(0, n, n)
+
+# Create a vector of sequence names
+sequence_names <- names(list_gt3_UTR)
+
+# Assign row and column names
+rownames(lev_distance_matrix_3UTR) <- sequence_names
+colnames(lev_distance_matrix_3UTR) <- sequence_names
+
+rownames(lev_distance_percentage_matrix_3UTR) <- sequence_names
+colnames(lev_distance_percentage_matrix_3UTR) <- sequence_names
+
+# Loop through list_gt3_UTR
+for (i in 1:n) {
+  for (j in 1:n) {
+    # Example dot-bracket notations from list_gt3_UTR
+    sequence_1 <- list_gt3_UTR[[i]][2, ]
+    sequence_2 <- list_gt3_UTR[[j]][2, ]
+
+    # Calculate the Levenshtein distance
+    lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
+
+    # Length of the longer sequence
+    max_length <- max(nchar(sequence_1), nchar(sequence_2))
+
+    # Calculate the Levenshtein distance as a percentage
+    lev_distance_percentage <- (lev_distance / max_length) * 100
+
+    # Store results in matrices
+    lev_distance_matrix_3UTR[i, j] <- lev_distance
+    lev_distance_percentage_matrix_3UTR[i, j] <- lev_distance_percentage
+  }
+}
+
+
+#################
+# now for 5_UTR #
+#################
+
+
+# Initialize matrices
+n <- length(list_lt5_UTR)
+lev_distance_matrix_5UTR <- matrix(0, n, n)
+lev_distance_percentage_matrix_5UTR <- matrix(0, n, n)
+
+# Create a vector of sequence names
+sequence_names <- names(list_lt5_UTR)
+
+# Assign row and column names
+rownames(lev_distance_matrix_5UTR) <- sequence_names
+colnames(lev_distance_matrix_5UTR) <- sequence_names
+
+rownames(lev_distance_percentage_matrix_5UTR) <- sequence_names
+colnames(lev_distance_percentage_matrix_5UTR) <- sequence_names
+
+# Loop through list_gt5_UTR
+for (i in 1:n) {
+  for (j in 1:n) {
+    # Example dot-bracket notations from list_lt5_UTR
+    sequence_1 <- list_lt5_UTR[[i]][2, ]
+    sequence_2 <- list_lt5_UTR[[j]][2, ]
+
+    # Calculate the Levenshtein distance
+    lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
+
+    # Length of the longer sequence
+    max_length <- max(nchar(sequence_1), nchar(sequence_2))
+
+    # Calculate the Levenshtein distance as a percentage
+    lev_distance_percentage <- (lev_distance / max_length) * 100
+
+    # Store results in matrices
+    lev_distance_matrix_5UTR[i, j] <- lev_distance
+    lev_distance_percentage_matrix_5UTR[i, j] <- lev_distance_percentage
+  }
+}
