@@ -18,6 +18,7 @@ library(cowplot)
 library(magick)
 library(patchwork)
 library(ggplot2)
+library(Biostrings)
 
 
 ##########
@@ -326,7 +327,120 @@ ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10,dpi=
 # set path back to code directory
 setwd("A:/Praktikum_Chris/R/code")
 
+##########################################################
+###### Perform global and local Allignment ###############
+##########################################################
 
+# Initialize empty lists to store the separated objects
+list_gt3_UTR <- list()
+list_lt5_UTR <- list()
+
+
+
+for(i in 1:length(results_list)){
+  if (grepl("^>3_UTR", names(results_list)[i])) {
+    list_gt3_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
+  } else if (grepl(">5_UTR", names(results_list)[i])) {
+    list_lt5_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
+  }
+
+}
+
+
+n <- length(list_lt5_UTR)
+alignment_scores_local_5UTR <- matrix(NA, n, n)
+alignment_scores_global_5UTR <- matrix(NA, n, n)
+
+alignment_results_local_5UTR <- list()
+alignment_results_global_5UTR <- list()
+
+
+# Loop through results_list for 5_UTR
+for (i in 1:length(list_lt5_UTR)) {
+
+
+  for (j in 1:length(list_lt5_UTR)) {
+
+    sequence_1 <- list_lt5_UTR[[i]][2,]
+    sequence_2 <- list_lt5_UTR[[j]][2,]
+
+    #print(sequence_1)
+    #print(sequence_2)
+
+    alignment <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "local")
+    alignment_g <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "global")
+
+    #print(paste("score for global",score(alignment_g)))
+    #print(paste("score for global",score(alignment)))
+    alignment_results_local_5UTR[[paste("alignment_", names(list_lt5_UTR[i]), "_", names(list_lt5_UTR[j]), sep = "")]] <- alignment
+    alignment_results_global_5UTR[[paste("alignment_", names(list_lt5_UTR[i]), "_", names(list_lt5_UTR[j]), sep = "")]] <- alignment_g
+
+    alignment_scores_local_5UTR[i, j] <- score(alignment)
+    alignment_scores_global_5UTR[i, j] <- score(alignment_g)
+
+
+  }
+}
+
+# Add row and column names
+rownames(alignment_scores_local_5UTR) <- names(list_lt5_UTR)
+colnames(alignment_scores_local_5UTR) <- names(list_lt5_UTR)
+
+rownames(alignment_scores_global_5UTR) <- names(list_lt5_UTR)
+colnames(alignment_scores_global_5UTR) <- names(list_lt5_UTR)
+
+
+
+#############################
+# now for 3_UTR #############
+#############################
+
+n <- length(list_gt3_UTR)
+alignment_scores_local_3UTR <- matrix(NA, n, n)
+alignment_scores_global_3UTR <- matrix(NA, n, n)
+
+alignment_results_local_3UTR <- list()
+alignment_results_global_3UTR <- list()
+
+
+# Loop through results_list for 5_UTR
+for (i in 2:length(list_gt3_UTR)) { # !!!!!!! 2 to ignore alvinovirus sequence. change to 1 in the future
+
+
+  for (j in 2:length(list_gt3_UTR)) { # !!!!!!! 2 to ignore alvinovirus sequence. change to 1 in the future
+
+    sequence_1 <- list_gt3_UTR[[i]][2,]
+    sequence_2 <- list_gt3_UTR[[j]][2,]
+
+    #print(sequence_1)
+    #print(sequence_2)
+
+    alignment <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "local")
+    alignment_g <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "global")
+
+    #print(paste("score for global",score(alignment_g)))
+    #print(paste("score for global",score(alignment)))
+    alignment_results_local_3UTR[[paste("alignment_", names(list_gt3_UTR[i]), "_", names(list_gt3_UTR[j]), sep = "")]] <- alignment
+    alignment_results_global_3UTR[[paste("alignment_", names(list_gt3_UTR[i]), "_", names(list_gt3_UTR[j]), sep = "")]] <- alignment_g
+
+    alignment_scores_local_3UTR[i, j] <- score(alignment)
+    alignment_scores_global_3UTR[i, j] <- score(alignment_g)
+
+
+  }
+}
+
+# Add row and column names
+rownames(alignment_scores_local_3UTR) <- names(list_gt3_UTR)
+colnames(alignment_scores_local_3UTR) <- names(list_gt3_UTR)
+
+rownames(alignment_scores_global_3UTR) <- names(list_gt3_UTR)
+colnames(alignment_scores_global_3UTR) <- names(list_gt3_UTR)
+
+
+# alvinovirus is too short. it was ignored for allignment. We remove its rows and coloumns to remove NAs
+alignment_scores_global_3UTR <- alignment_scores_global_3UTR[-1, -1]                          # !!!!!!! remove for future virus-data.
+alignment_scores_local_3UTR <- alignment_scores_local_3UTR[-1, -1]                            # !!!!!!! remove for future virus-data.
 
 
 
