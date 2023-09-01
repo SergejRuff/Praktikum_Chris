@@ -27,6 +27,9 @@ library(Biostrings)
 
 fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_roniviruses_n6.fasta"
 current_date <- Sys.Date()
+
+basedirectory <- "A:/Praktikum_Chris/output" # where should the output be placed. ! Important.
+# All other folders will be generated in basedirectory
 # Import from local files
 
 sequences <- read.fasta(file=fasta_files,as.string=TRUE)
@@ -115,7 +118,6 @@ for (i in 1:length(sequences)){
   # exprort for each virus in individual folders and than collect each fasta file in one folder.
   # Meaning fasta files are exported twice.
 
-  basedirectory <- "A:/Praktikum_Chris/output"
   folder_name <- paste0("fasta_files_",Sys.Date())
   folder_path_ <- file.path(basedirectory, folder_name)
 
