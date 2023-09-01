@@ -443,25 +443,6 @@ alignment_scores_global_3UTR <- alignment_scores_global_3UTR[-1, -1]            
 alignment_scores_local_3UTR <- alignment_scores_local_3UTR[-1, -1]                            # !!!!!!! remove for future virus-data.
 
 
-# creat a score-results folder if not already created
-score_folder <- "allignmentscores"
-scores_path <- file.path(folder_path_, score_folder)
-
-if (!dir.exists(scores_path)) {
-  dir.create(scores_path, recursive = TRUE)
-}
-
-
-# Write the matrix to a CSV file
-write.csv(alignment_scores_local_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
-
-# Write the matrix to a CSV file
-write.csv(alignment_scores_global_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_3UTR.csv"))
-
-# Write the matrix to a CSV file
-write.csv(alignment_scores_local_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
-# Write the matrix to a CSV file
-write.csv(alignment_scores_global_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
 
 
 
@@ -549,3 +530,40 @@ for (i in 1:n) {
     lev_distance_percentage_matrix_5UTR[i, j] <- lev_distance_percentage
   }
 }
+
+###################### ######################
+# Export Allignment and Levenstein_matrices #
+#############################################
+
+# creat a score-results folder if not already created
+score_folder <- "allignmentscores"
+scores_path <- file.path(folder_path_, score_folder)
+
+if (!dir.exists(scores_path)) {
+  dir.create(scores_path, recursive = TRUE)
+}
+
+
+# Write the matrix to a CSV file
+write.csv(alignment_scores_local_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
+
+# Write the matrix to a CSV file
+write.csv(alignment_scores_global_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_3UTR.csv"))
+
+# Write the matrix to a CSV file
+write.csv(alignment_scores_local_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
+# Write the matrix to a CSV file
+write.csv(alignment_scores_global_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
+
+### Lvenstein
+
+# Write the matrix to a CSV file
+write.csv(lev_distance_matrix_5UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_5UTR.csv"))
+
+# Write the matrix to a CSV file
+write.csv(lev_distance_percentage_matrix_5UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_5UTR.csv"))
+
+# Write the matrix to a CSV file
+write.csv(lev_distance_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_3UTR.csv"))
+# Write the matrix to a CSV file
+write.csv(lev_distance_percentage_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
