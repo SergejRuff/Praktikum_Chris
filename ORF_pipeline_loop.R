@@ -569,5 +569,4 @@ utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],"fiveUTR_njtree.png")
 setwd("A:/Praktikum_Chris/R/code")
 
 
-##########################################
-#
+
