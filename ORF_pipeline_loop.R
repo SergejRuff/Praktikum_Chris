@@ -19,6 +19,7 @@ library(magick)
 library(patchwork)
 library(ggplot2)
 library(Biostrings)
+library(ape)
 
 
 ##########
@@ -526,4 +527,47 @@ write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = pa
 gc()  # Trigger garbage collection to release memory
 
 
+###########################
+# Perfom Neighbor Joining #
+###########################
 
+setwd(scores_path)
+
+utr_nj <- function(matrix,filename){
+
+  # find out the max number in matrix diag
+  max_diagonal_distance <- max(diag(matrix))
+
+  # substract values in matrix from max value -> negative values become positive
+  distance_matrix <- max_diagonal_distance  - matrix
+
+  # set diag. to 0.
+  diag(distance_matrix) <- 0
+
+  # performs the neighbor-joining tree estimation of Saitou and Nei
+  njtree <- nj(distance_matrix)
+
+  #plot results.
+
+  # Create a larger plot area
+  par(mfrow = c(1, 1))
+  plot(njtree,main = "Neighbor-Joining Tree", cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = "blue")
+
+
+  png(filename, width = 800, height = 600)
+  dev.off()
+
+
+}
+
+# Call the function with allignment matrix
+utr_nj(threeUTR_allignment[["alignment_scores_global_UTR"]],"threeUTR_njtree.png")
+
+utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],"fiveUTR_njtree.png")
+
+# Set path back to the code directory
+setwd("A:/Praktikum_Chris/R/code")
+
+
+##########################################
+#
