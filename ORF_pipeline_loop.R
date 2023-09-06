@@ -25,8 +25,10 @@ library(Biostrings)
 # Import
 ###########
 
-fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_roniviruses_n6.fasta"
+fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_refseq.fasta"
 current_date <- Sys.Date()
+current_time <- format(Sys.time(), format = "%H-%M-%S")
+current_date <- paste0(current_date,"_",current_time)
 
 basedirectory <- "A:/Praktikum_Chris/output" # where should the output be placed. ! Important.
 # All other folders will be generated in basedirectory
@@ -118,7 +120,7 @@ for (i in 1:length(sequences)){
   # exprort for each virus in individual folders and than collect each fasta file in one folder.
   # Meaning fasta files are exported twice.
 
-  folder_name <- paste0("fasta_files_",Sys.Date())
+  folder_name <- paste0("fasta_files_",current_date)
   folder_path_ <- file.path(basedirectory, folder_name)
 
   if (!dir.exists(folder_path_)) {
@@ -134,9 +136,9 @@ for (i in 1:length(sequences)){
 
   setwd(folder_path) # save all fasta files and position-info in each folder per virus.
 
-  write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
 
-  write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
 
   gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
 
@@ -152,9 +154,9 @@ for (i in 1:length(sequences)){
 
   # save all fasta files in one folder called Alle_Fastafiles
 
-  write.fasta(five_UTR,names=paste("5_UTR of",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
 
-  write.fasta(three_UTR,names=paste("3_UTR of",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
 
   setwd("A:/Praktikum_Chris/R/code")
 
@@ -172,7 +174,7 @@ combined_table <- gt(combined_data) %>%
   opt_align_table_header(align = "left")
 
 # Print the combined table
-print(combined_table)
+#print(combined_table)
 
 gtsave(data=combined_table,filename ="table_Gesamt.pdf",path=folder_path_)
 
@@ -274,6 +276,51 @@ system(command)
 # Path to the directory containing plots
 plots_directory <- paste0(folder_path_,"/","plots")
 
+if (!dir.exists(plots_directory)) {
+  dir.create(plots_directory, recursive = TRUE)
+}
+
+setwd(plots_directory)
+
+
+# Function to combine and save plots with unique filenames
+combine_and_save_plots <- function(plot_files, prefix) {
+  num_plots <- length(plot_files)
+  num_per_combined <- 3  # Number of plots to combine in each image
+  num_combined <- ceiling(num_plots / num_per_combined)
+
+  timestamp <- Sys.Date()
+
+
+  for (i in seq_len(num_combined)) {
+    start_idx <- (i - 1) * num_per_combined + 1
+    end_idx <- min(i * num_per_combined, num_plots)
+
+    current_plot_files <- plot_files[start_idx:end_idx]
+    imported_plots <- import_and_plot(current_plot_files)
+
+    # Add titles to plots
+    plots_list <- lapply(names(imported_plots), function(title) {
+      plot <- imported_plots[[title]]
+      title2 <- gsub("\\.png$", "", title)
+      plot + ggtitle(title2) + theme(plot.title = element_text(size = 10, hjust = 0.5))
+    })
+
+    # Combine plots using patchwork
+    combined_plot <- wrap_plots(plots = plots_list, ncol = 1)
+
+    # Generate a unique output filename with a timestamp
+    output_filename <- paste0(prefix, "_", timestamp, "_", i, ".pdf")
+
+    # Export the combined plot as a PNG file
+    ggsave(output_filename, combined_plot, width = 8, height = 10, dpi = 320)
+    gc()  # Trigger garbage collection to release memory
+  }
+}
+
+# Path to the directory containing plots
+plots_directory <- paste0(folder_path_, "/", "plots")
+
 # List of plot file names
 plot_files <- list.files(plots_directory, pattern = "\\.png$", full.names = TRUE)
 
@@ -310,24 +357,20 @@ plots_list_utr5 <- lapply(names(imported_plots_utr5), function(title) {
   plot + ggtitle(title2) + theme(plot.title = element_text(size = 10, hjust = 0.5))
 })
 
-# Combine plots using patchwork for "3_UTR" images
-combined_plot_utr3 <- wrap_plots(plots = plots_list_utr3, ncol = 1)
+# Combine and save "3_UTR" plots with unique filenames
+combine_and_save_plots(utr3_plot_files, "combined_plot_utr3")
+gc()  # Trigger garbage collection to release memory
 
-# Combine plots using patchwork for "5_UTR" images
-combined_plot_utr5 <- wrap_plots(plots = plots_list_utr5, ncol = 1)
+# Combine and save "5_UTR" plots with unique filenames
+combine_and_save_plots(utr5_plot_files, "combined_plot_utr5")
+gc()  # Trigger garbage collection to release memory
 
-# Display the combined plots
-print(combined_plot_utr3)
-print(combined_plot_utr5)
+rm("imported_plots_utr5","imported_plots_utr3","plots_list_utr5","plots_list_utr3")
+gc()  # Trigger garbage collection to release memory
 
-setwd(plots_directory)
-
-# Export plots as PDF files
-ggsave("combined_plot_utr3.pdf", combined_plot_utr3, width = 8, height = 10,dpi=320)
-ggsave("combined_plot_utr5.pdf", combined_plot_utr5, width = 8, height = 10,dpi=320)
-
-# set path back to code directory
+# Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
+
 
 ##########################################################
 ###### Perform global and local Allignment ###############
@@ -437,11 +480,11 @@ allignment_gl <- function(UTR_list,start=1){
 
 
 fiveUTR_allignment <- allignment_gl(UTR_list =list_lt5_UTR,start=1)
-threeUTR_allignment <- allignment_gl(UTR_list =list_gt3_UTR,start=2) # change start for future !
+threeUTR_allignment <- allignment_gl(UTR_list =list_gt3_UTR,start=1) # change start for future !
 
 # alvinovirus is too short. it was ignored for allignment. We remove its rows and coloumns to remove NAs
-threeUTR_allignment[["alignment_scores_global_UTR"]] <- threeUTR_allignment[["alignment_scores_global_UTR"]][-1, -1]                          # !!!!!!! remove for future virus-data.
-threeUTR_allignment[["alignment_scores_local_UTR"]]<- threeUTR_allignment[["alignment_scores_local_UTR"]][-1, -1]                            # !!!!!!! remove for future virus-data.
+#threeUTR_allignment[["alignment_scores_global_UTR"]] <- threeUTR_allignment[["alignment_scores_global_UTR"]][-1, -1]                          # !!!!!!! remove for future virus-data.
+#threeUTR_allignment[["alignment_scores_local_UTR"]]<- threeUTR_allignment[["alignment_scores_local_UTR"]][-1, -1]                            # !!!!!!! remove for future virus-data.
 
 ###################### ######################
 # Export Allignment and Levenstein_matrices #
@@ -480,6 +523,7 @@ write.csv(threeUTR_allignment[["lev_distance_matrix_UTR"]], file = paste0(folder
 # Write the matrix to a CSV file
 write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
 
+gc()  # Trigger garbage collection to release memory
 
 
 
