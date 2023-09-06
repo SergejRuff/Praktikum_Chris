@@ -40,7 +40,7 @@ sequences <- read.fasta(file=fasta_files,as.string=TRUE)
 all_data <- list()
 
 has_poly_a_tail <- function(sequence) {
-  poly_a_pattern <- "A{3,}$"
+  poly_a_pattern <- "A{5,}$"
   grepl(poly_a_pattern, sequence)
 }
 
