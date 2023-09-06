@@ -194,7 +194,7 @@ for (i in 1:length(fasta_files)){
 
   print(paste("performing RNAfold for virus:",name_virus))
 
-  results <- run_RNAfold(sequences2,RNAfold.path = "A:/Praktikum_Chris/RNAfold/RNAfold.exe",parallel.cores = -1 ) # perform RNAfold using LncFinder-package
+  results <- run_RNAfold(sequences2,RNAfold.path = "A:/Praktikum_Chris/viennarna/RNAfold.exe",parallel.cores = -1 ) # perform RNAfold using LncFinder-package
 
   results_list[[i]] <- results # save results into a list. dataframes containing sequence, dot bracket notation and energy.
 
@@ -349,189 +349,99 @@ for(i in 1:length(results_list)){
 }
 
 
-n <- length(list_lt5_UTR)
-alignment_scores_local_5UTR <- matrix(NA, n, n)
-alignment_scores_global_5UTR <- matrix(NA, n, n)
 
-alignment_results_local_5UTR <- list()
-alignment_results_global_5UTR <- list()
+allignment_gl <- function(UTR_list,start=1){
 
+  n <- length(UTR_list)
+  alignment_scores_local_UTR <- matrix(NA, n, n)
+  alignment_scores_global_UTR <- matrix(NA, n, n)
 
-# Loop through results_list for 5_UTR
-for (i in 1:length(list_lt5_UTR)) {
+  alignment_results_local_UTR <- list()
+  alignment_results_global_UTR <- list()
 
+  lev_distance_matrix_UTR <- matrix(0, n, n)
+  lev_distance_percentage_matrix_UTR <- matrix(0, n, n)
 
-  for (j in 1:length(list_lt5_UTR)) {
+  # Create a vector of sequence names
+  sequence_names <- names(UTR_list)
 
-    sequence_1 <- list_lt5_UTR[[i]][2,]
-    sequence_2 <- list_lt5_UTR[[j]][2,]
+  # Assign row and column names
+  rownames(lev_distance_matrix_UTR) <- sequence_names
+  colnames(lev_distance_matrix_UTR) <- sequence_names
 
-    #print(sequence_1)
-    #print(sequence_2)
+  rownames(lev_distance_percentage_matrix_UTR) <- sequence_names
+  colnames(lev_distance_percentage_matrix_UTR) <- sequence_names
 
-    alignment <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "local")
-    alignment_g <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "global")
+  # Loop through UTR_list
+  for (i in 1:n) {
+    for (j in 1:n) {
+      # Example dot-bracket notations from UTR_list
+      sequence_1 <- UTR_list[[i]][2, ]
+      sequence_2 <- UTR_list[[j]][2, ]
 
-    #print(paste("score for global",score(alignment_g)))
-    #print(paste("score for global",score(alignment)))
-    alignment_results_local_5UTR[[paste("alignment_", names(list_lt5_UTR[i]), "_", names(list_lt5_UTR[j]), sep = "")]] <- alignment
-    alignment_results_global_5UTR[[paste("alignment_", names(list_lt5_UTR[i]), "_", names(list_lt5_UTR[j]), sep = "")]] <- alignment_g
+      # Calculate the Levenshtein distance
+      lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
 
-    alignment_scores_local_5UTR[i, j] <- score(alignment)
-    alignment_scores_global_5UTR[i, j] <- score(alignment_g)
+      # Length of the longer sequence
+      max_length <- max(nchar(sequence_1), nchar(sequence_2))
 
+      # Calculate the Levenshtein distance as a percentage
+      lev_distance_percentage <- (lev_distance / max_length) * 100
 
+      # Store results in matrices
+      lev_distance_matrix_UTR[i, j] <- lev_distance
+      lev_distance_percentage_matrix_UTR[i, j] <- lev_distance_percentage
+    }
   }
+
+
+  # Loop through results_list for 5_UTR
+  for (i in start:length(UTR_list)) {
+
+
+    for (j in start:length(UTR_list)) {
+
+      sequence_1 <- UTR_list[[i]][2,]
+      sequence_2 <- UTR_list[[j]][2,]
+
+      #print(sequence_1)
+      #print(sequence_2)
+
+      alignment <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "local")
+      alignment_g <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "global")
+
+      #print(paste("score for global",score(alignment_g)))
+      #print(paste("score for global",score(alignment)))
+      alignment_results_local_UTR[[paste("alignment_", names(UTR_list[i]), "_", names(UTR_list[j]), sep = "")]] <- alignment
+      alignment_results_global_UTR[[paste("alignment_", names(UTR_list[i]), "_", names(UTR_list[j]), sep = "")]] <- alignment_g
+
+      alignment_scores_local_UTR[i, j] <- score(alignment)
+      alignment_scores_global_UTR[i, j] <- score(alignment_g)
+
+
+    }
+  }
+
+  # Add row and column names
+  rownames(alignment_scores_local_UTR) <- names(UTR_list)
+  colnames(alignment_scores_local_UTR) <- names(UTR_list)
+
+  rownames(alignment_scores_global_UTR) <- names(UTR_list)
+  colnames(alignment_scores_global_UTR) <- names(UTR_list)
+
+  return(list(alignment_scores_local_UTR=alignment_scores_local_UTR,alignment_scores_global_UTR=alignment_scores_global_UTR,
+              alignment_results_local_UTR=alignment_results_local_UTR,alignment_results_global_UTR=alignment_results_global_UTR,
+              lev_distance_matrix_UTR=lev_distance_matrix_UTR,lev_distance_percentage_matrix_UTR=lev_distance_percentage_matrix_UTR))
+
 }
 
-# Add row and column names
-rownames(alignment_scores_local_5UTR) <- names(list_lt5_UTR)
-colnames(alignment_scores_local_5UTR) <- names(list_lt5_UTR)
 
-rownames(alignment_scores_global_5UTR) <- names(list_lt5_UTR)
-colnames(alignment_scores_global_5UTR) <- names(list_lt5_UTR)
-
-
-
-#############################
-# now for 3_UTR #############
-#############################
-
-n <- length(list_gt3_UTR)
-alignment_scores_local_3UTR <- matrix(NA, n, n)
-alignment_scores_global_3UTR <- matrix(NA, n, n)
-
-alignment_results_local_3UTR <- list()
-alignment_results_global_3UTR <- list()
-
-
-# Loop through results_list for 5_UTR
-for (i in 2:length(list_gt3_UTR)) { # !!!!!!! 2 to ignore alvinovirus sequence. change to 1 in the future
-
-
-  for (j in 2:length(list_gt3_UTR)) { # !!!!!!! 2 to ignore alvinovirus sequence. change to 1 in the future
-
-    sequence_1 <- list_gt3_UTR[[i]][2,]
-    sequence_2 <- list_gt3_UTR[[j]][2,]
-
-    #print(sequence_1)
-    #print(sequence_2)
-
-    alignment <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "local")
-    alignment_g <- pairwiseAlignment(pattern = sequence_1, subject = sequence_2, type = "global")
-
-    #print(paste("score for global",score(alignment_g)))
-    #print(paste("score for global",score(alignment)))
-    alignment_results_local_3UTR[[paste("alignment_", names(list_gt3_UTR[i]), "_", names(list_gt3_UTR[j]), sep = "")]] <- alignment
-    alignment_results_global_3UTR[[paste("alignment_", names(list_gt3_UTR[i]), "_", names(list_gt3_UTR[j]), sep = "")]] <- alignment_g
-
-    alignment_scores_local_3UTR[i, j] <- score(alignment)
-    alignment_scores_global_3UTR[i, j] <- score(alignment_g)
-
-
-  }
-}
-
-# Add row and column names
-rownames(alignment_scores_local_3UTR) <- names(list_gt3_UTR)
-colnames(alignment_scores_local_3UTR) <- names(list_gt3_UTR)
-
-rownames(alignment_scores_global_3UTR) <- names(list_gt3_UTR)
-colnames(alignment_scores_global_3UTR) <- names(list_gt3_UTR)
-
+fiveUTR_allignment <- allignment_gl(UTR_list =list_lt5_UTR,start=1)
+threeUTR_allignment <- allignment_gl(UTR_list =list_gt3_UTR,start=2) # change start for future !
 
 # alvinovirus is too short. it was ignored for allignment. We remove its rows and coloumns to remove NAs
-alignment_scores_global_3UTR <- alignment_scores_global_3UTR[-1, -1]                          # !!!!!!! remove for future virus-data.
-alignment_scores_local_3UTR <- alignment_scores_local_3UTR[-1, -1]                            # !!!!!!! remove for future virus-data.
-
-
-
-
-
-######################
-# Perform Levenstein #
-######################
-
-
-# Initialize matrices
-n <- length(list_gt3_UTR)
-lev_distance_matrix_3UTR <- matrix(0, n, n)
-lev_distance_percentage_matrix_3UTR <- matrix(0, n, n)
-
-# Create a vector of sequence names
-sequence_names <- names(list_gt3_UTR)
-
-# Assign row and column names
-rownames(lev_distance_matrix_3UTR) <- sequence_names
-colnames(lev_distance_matrix_3UTR) <- sequence_names
-
-rownames(lev_distance_percentage_matrix_3UTR) <- sequence_names
-colnames(lev_distance_percentage_matrix_3UTR) <- sequence_names
-
-# Loop through list_gt3_UTR
-for (i in 1:n) {
-  for (j in 1:n) {
-    # Example dot-bracket notations from list_gt3_UTR
-    sequence_1 <- list_gt3_UTR[[i]][2, ]
-    sequence_2 <- list_gt3_UTR[[j]][2, ]
-
-    # Calculate the Levenshtein distance
-    lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
-
-    # Length of the longer sequence
-    max_length <- max(nchar(sequence_1), nchar(sequence_2))
-
-    # Calculate the Levenshtein distance as a percentage
-    lev_distance_percentage <- (lev_distance / max_length) * 100
-
-    # Store results in matrices
-    lev_distance_matrix_3UTR[i, j] <- lev_distance
-    lev_distance_percentage_matrix_3UTR[i, j] <- lev_distance_percentage
-  }
-}
-
-
-#################
-# now for 5_UTR #
-#################
-
-
-# Initialize matrices
-n <- length(list_lt5_UTR)
-lev_distance_matrix_5UTR <- matrix(0, n, n)
-lev_distance_percentage_matrix_5UTR <- matrix(0, n, n)
-
-# Create a vector of sequence names
-sequence_names <- names(list_lt5_UTR)
-
-# Assign row and column names
-rownames(lev_distance_matrix_5UTR) <- sequence_names
-colnames(lev_distance_matrix_5UTR) <- sequence_names
-
-rownames(lev_distance_percentage_matrix_5UTR) <- sequence_names
-colnames(lev_distance_percentage_matrix_5UTR) <- sequence_names
-
-# Loop through list_gt5_UTR
-for (i in 1:n) {
-  for (j in 1:n) {
-    # Example dot-bracket notations from list_lt5_UTR
-    sequence_1 <- list_lt5_UTR[[i]][2, ]
-    sequence_2 <- list_lt5_UTR[[j]][2, ]
-
-    # Calculate the Levenshtein distance
-    lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
-
-    # Length of the longer sequence
-    max_length <- max(nchar(sequence_1), nchar(sequence_2))
-
-    # Calculate the Levenshtein distance as a percentage
-    lev_distance_percentage <- (lev_distance / max_length) * 100
-
-    # Store results in matrices
-    lev_distance_matrix_5UTR[i, j] <- lev_distance
-    lev_distance_percentage_matrix_5UTR[i, j] <- lev_distance_percentage
-  }
-}
+threeUTR_allignment[["alignment_scores_global_UTR"]] <- threeUTR_allignment[["alignment_scores_global_UTR"]][-1, -1]                          # !!!!!!! remove for future virus-data.
+threeUTR_allignment[["alignment_scores_local_UTR"]]<- threeUTR_allignment[["alignment_scores_local_UTR"]][-1, -1]                            # !!!!!!! remove for future virus-data.
 
 ###################### ######################
 # Export Allignment and Levenstein_matrices #
@@ -547,28 +457,28 @@ if (!dir.exists(scores_path)) {
 
 
 # Write the matrix to a CSV file
-write.csv(alignment_scores_local_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
+write.csv(threeUTR_allignment[["alignment_scores_local_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
 
 # Write the matrix to a CSV file
-write.csv(alignment_scores_global_3UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_3UTR.csv"))
+write.csv(threeUTR_allignment[["alignment_scores_global_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_3UTR.csv"))
 
 # Write the matrix to a CSV file
-write.csv(alignment_scores_local_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
+write.csv(fiveUTR_allignment[["alignment_scores_local_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
 # Write the matrix to a CSV file
-write.csv(alignment_scores_global_5UTR, file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
+write.csv(fiveUTR_allignment[["alignment_scores_global_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
 
 ### Lvenstein
 
 # Write the matrix to a CSV file
-write.csv(lev_distance_matrix_5UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_5UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_5UTR.csv"))
 
 # Write the matrix to a CSV file
-write.csv(lev_distance_percentage_matrix_5UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_5UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_5UTR.csv"))
 
 # Write the matrix to a CSV file
-write.csv(lev_distance_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_3UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_3UTR.csv"))
 # Write the matrix to a CSV file
-write.csv(lev_distance_percentage_matrix_3UTR, file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
 
 
 
