@@ -65,7 +65,7 @@ for (i in 1:length(sequences)){
 
   # find the ORFs in + direction with length of 300 or more. Using ORFik-package
   orfs<- findORFs(seq, minimumLength = 98,startCodon = "ATG")      # !!!!!!!! might need to change length later. 248 for 750
-                                                                   # !!!! Startcodon changes results. Default uses alternative codons as well.
+  # !!!! Startcodon changes results. Default uses alternative codons as well.
 
 
   # Convert the Data to a data frame
@@ -132,7 +132,7 @@ for (i in 1:length(sequences)){
   # exprort for each virus in individual folders and than collect each fasta file in one folder.
   # Meaning fasta files are exported twice.
 
-  folder_name <- paste0("fasta_files_",current_date)
+  folder_name <- paste0("polya_fasta_files_",current_date)
   folder_path_ <- file.path(basedirectory, folder_name)
 
   if (!dir.exists(folder_path_)) {
@@ -141,18 +141,24 @@ for (i in 1:length(sequences)){
 
   folder_path <- file.path(folder_path_, NameofTaxon)
 
-  if (!dir.exists(folder_path)) {
-    dir.create(folder_path, recursive = TRUE)
+
+
+  if (has_poly_a) {
+
+    if (!dir.exists(folder_path)) {
+      dir.create(folder_path, recursive = TRUE)
+    }
+
+    setwd(folder_path) # save all fasta files and position-info in each folder per virus.
+
+    write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+
+    write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+
+    gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
+
   }
 
-
-  setwd(folder_path) # save all fasta files and position-info in each folder per virus.
-
-  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
-
-  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
-
-  gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
 
 
 
@@ -164,11 +170,15 @@ for (i in 1:length(sequences)){
 
   setwd(folder_path2)
 
-  # save all fasta files in one folder called Alle_Fastafiles
+  if (has_poly_a){
+    # save all fasta files in one folder called Alle_Fastafiles
 
-  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+    write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
 
-  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+    write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+
+
+  }
 
   setwd("A:/Praktikum_Chris/R/code")
 
@@ -571,6 +581,7 @@ utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],"fiveUTR_njtree.png")
 
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
+
 
 
 
