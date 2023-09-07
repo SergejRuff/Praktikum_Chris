@@ -20,6 +20,7 @@ library(patchwork)
 library(ggplot2)
 library(Biostrings)
 library(ape)
+library(dendextend)
 
 
 ##########
@@ -34,6 +35,9 @@ current_date <- paste0(current_date,"_",current_time)
 basedirectory <- "A:/Praktikum_Chris/output" # where should the output be placed. ! Important.
 # All other folders will be generated in basedirectory
 # Import from local files
+
+# Path to your Bash script (including the script file name)
+bash_script_path <- "/mnt/a/Praktikum_Chris/visualise_ct_files_naview.sh"
 
 sequences <- read.fasta(file=fasta_files,as.string=TRUE)
 
@@ -279,9 +283,6 @@ plot_path <- paste0("/mnt/",plot_path)
 new_PLOTS_DIR <- paste0(plot_path,"/plots/")
 
 
-
-# Path to your Bash script (including the script file name)
-bash_script_path <- "/mnt/a/Praktikum_Chris/visualise_ct_files_naview.sh"
 
 # Build the command with arguments
 command <- sprintf("bash \"%s\" \"%s\" \"%s\"", shQuote(bash_script_path), shQuote(wsl_path), shQuote(new_PLOTS_DIR))
@@ -554,7 +555,8 @@ gc()  # Trigger garbage collection to release memory
 
 setwd(scores_path)
 
-utr_nj <- function(matrix,filename){
+utr_nj <- function(matrix,filename,test){
+
 
   distance_matrix <- as.matrix(dist(matrix))
 
@@ -565,23 +567,68 @@ utr_nj <- function(matrix,filename){
 
   # Create a larger plot area
   par(mfrow = c(1, 1))
-  plot(njtree,main = "Neighbor-Joining Tree", cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = "blue")
+  plot(njtree,main = paste("njplot for",test), cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = "blue")
 
 
 
   dev.off()
 
+  return(njtree)
+
 
 }
 
-# Call the function with allignment matrix
-utr_nj(threeUTR_allignment[["alignment_scores_global_UTR"]],"threeUTR_njtree.png")
 
-utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],"fiveUTR_njtree.png")
+tanglegram_plot <- function(x,y,all_x,all_y,filename){
+
+  # Check if x and y are valid phylogenetic trees
+  if (!is(x, "phylo") || !is(y, "phylo")) {
+    stop("Input x and y must be valid phylogenetic trees.")
+  }
+
+  # Check if all_x and all_y are character vectors
+  if (!is.character(all_x) || !is.character(all_y)) {
+    stop("all_x and all_y must be character vectors.")
+  }
+
+  tangleplot<- cophylo(x,y)
+
+  #plot results.
+  png(filename, width = 1920, height = 1080)
+
+  # Create a larger plot area
+  par(mar = c(8, 4, 4, 2) + 0.1)
+  plot(tangleplot)
+  title(main = paste("tangleplot for",all_x,"and",all_y))
+  dev.off()
+}
+
+
+# Call the function with allignment matrix
+tree_3_global <- utr_nj(threeUTR_allignment[["alignment_scores_global_UTR"]],filename="threeUTR_njtree_global.png",test="Global Alignment of 3´-UTR")
+
+tree_5_global <- utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],filename="fiveUTR_njtree_globa.png",test="Global Alignment of 5´-UTR")
+
+# call the function for local
+tree_3_local <- utr_nj(threeUTR_allignment[["alignment_scores_local_UTR"]],filename="threeUTR_njtree_local.png",test="Local Alignment of 3´-UTR")
+
+tree_5_local <- utr_nj(fiveUTR_allignment[["alignment_scores_local_UTR"]],filename="fiveUTR_njtree_local.png",test="Local Alignment of 5´-UTR")
+
+#call the function for levenstein
+tree_3_leven <- utr_nj(threeUTR_allignment[["lev_distance_matrix_UTR"]],filename="threeUTR_njtree_leven.png",test="Levenstein results for 3´-UTR")
+
+tree_5_leven <- utr_nj(fiveUTR_allignment[["lev_distance_matrix_UTR"]],filename="fiveUTR_njtree_leven.png",test="Levenstein results for 5´-UTR")
+
+
+# call functions to creat tangleplots.
+tanglegram_plot(tree_3_global,tree_3_local,all_x = "3´-UTR Global",all_y = "3´-UTR-local",filename="tangle_3UTR-Global-local.png")
+tanglegram_plot(tree_3_global,tree_3_leven,all_x = "3´-UTR Global",all_y = "3´-UTR-leven",filename="tangle_3UTR-Global-leven.png")
+tanglegram_plot(tree_3_local,tree_3_leven,all_x = "3´-UTR local",all_y = "3´-UTR-leven",filename="tangle_3UTR-local-leven.png")
+
+tanglegram_plot(tree_5_global ,tree_5_local,all_x = "5´-UTR Global",all_y = "5´-UTR-local",filename="tangle_5UTR-Global-local.png")
+tanglegram_plot(tree_5_global,tree_5_leven,all_x = "5´-UTR Global",all_y = "5´-UTR-leven",filename="tangle_5UTR-Global-leven.png")
+tanglegram_plot(tree_5_local,tree_5_leven,all_x = "5´-UTR local",all_y = "5´-UTR-leven",filename="tangle_5UTR-local-leven.png")
 
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
-
-
-
 
