@@ -21,6 +21,7 @@ library(ggplot2)
 library(Biostrings)
 library(ape)
 library(dendextend)
+library(phytools)
 
 
 ##########
@@ -632,3 +633,5 @@ tanglegram_plot(tree_5_local,tree_5_leven,all_x = "5´-UTR local",all_y = "5´-U
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
 
+#Robinson–Foulds metric
+dist.dendlist(dendlist(tree_3_global,tree_3_local)) #error Error in ape::as.hclust.phylo(object) : the tree is not ultrametric
