@@ -22,6 +22,7 @@ library(Biostrings)
 library(ape)
 library(dendextend)
 library(phytools)
+library(phangorn)
 
 
 ##########
@@ -415,8 +416,6 @@ for(i in 1:length(results_list)){
 
 }
 
-
-
 allignment_gl <- function(UTR_list,start=1){
 
   n <- length(UTR_list)
@@ -426,40 +425,28 @@ allignment_gl <- function(UTR_list,start=1){
   alignment_results_local_UTR <- list()
   alignment_results_global_UTR <- list()
 
-  lev_distance_matrix_UTR <- matrix(0, n, n)
-  lev_distance_percentage_matrix_UTR <- matrix(0, n, n)
+  lev_distance_matrix_UTR_global <- matrix(0, n, n)
+  lev_distance_percentage_matrix_UTR_global <- matrix(0, n, n)
+
+  lev_distance_matrix_UTR_local <- matrix(0, n, n)
+  lev_distance_percentage_matrix_UTR_local <- matrix(0, n, n)
 
   # Create a vector of sequence names
   sequence_names <- names(UTR_list)
 
   # Assign row and column names
-  rownames(lev_distance_matrix_UTR) <- sequence_names
-  colnames(lev_distance_matrix_UTR) <- sequence_names
+  rownames(lev_distance_matrix_UTR_global) <- sequence_names
+  colnames(lev_distance_matrix_UTR_global) <- sequence_names
 
-  rownames(lev_distance_percentage_matrix_UTR) <- sequence_names
-  colnames(lev_distance_percentage_matrix_UTR) <- sequence_names
+  rownames(lev_distance_percentage_matrix_UTR_global) <- sequence_names
+  colnames(lev_distance_percentage_matrix_UTR_global) <- sequence_names
 
-  # Loop through UTR_list
-  for (i in 1:n) {
-    for (j in 1:n) {
-      # Example dot-bracket notations from UTR_list
-      sequence_1 <- UTR_list[[i]][2, ]
-      sequence_2 <- UTR_list[[j]][2, ]
+  rownames(lev_distance_matrix_UTR_local) <- sequence_names
+  colnames(lev_distance_matrix_UTR_local) <- sequence_names
 
-      # Calculate the Levenshtein distance
-      lev_distance <- stringdist::stringdist(sequence_1, sequence_2)
+  rownames(lev_distance_percentage_matrix_UTR_local ) <- sequence_names
+  colnames(lev_distance_percentage_matrix_UTR_local ) <- sequence_names
 
-      # Length of the longer sequence
-      max_length <- max(nchar(sequence_1), nchar(sequence_2))
-
-      # Calculate the Levenshtein distance as a percentage
-      lev_distance_percentage <- (lev_distance / max_length) * 100
-
-      # Store results in matrices
-      lev_distance_matrix_UTR[i, j] <- lev_distance
-      lev_distance_percentage_matrix_UTR[i, j] <- lev_distance_percentage
-    }
-  }
 
 
   # Loop through results_list for 5_UTR
@@ -485,8 +472,37 @@ allignment_gl <- function(UTR_list,start=1){
       alignment_scores_local_UTR[i, j] <- score(alignment)
       alignment_scores_global_UTR[i, j] <- score(alignment_g)
 
+      # Example dot-bracket notations from UTR_list
+      subject_global <- toString(subject(alignment_g ))
+      subject_local <- toString(subject(alignment))
+      pattern_global <- toString(pattern(alignment_g ))
+      pattern_local <-toString(pattern(alignment))
+
+      # Calculate the Levenshtein distance for global
+      lev_distance_global <- stringdist::stringdist(subject_global, pattern_global)
+
+      # Calculate the Levenshtein distance for local
+      lev_distance_local <- stringdist::stringdist(subject_local, pattern_local)
+
+      # Length of the longer sequence
+      max_length_g <- max(nchar(subject_global), nchar(pattern_global))
+      max_length <- max(nchar(subject_local), nchar(pattern_local))
+
+      # Calculate the Levenshtein distance as a percentage
+      lev_distance_percentage_g <- (lev_distance_global / max_length_g) * 100
+      lev_distance_percentage_l <- (lev_distance_local / max_length) * 100
+
+      # Store results in matrices global
+      lev_distance_matrix_UTR_global[i, j] <-  lev_distance_global
+      lev_distance_percentage_matrix_UTR_global[i, j] <- lev_distance_percentage_g
+
+      # Store results in matrices local
+      lev_distance_matrix_UTR_local[i, j] <- lev_distance_local
+      lev_distance_percentage_matrix_UTR_local[i, j] <- lev_distance_percentage_l
+
 
     }
+
   }
 
   # Add row and column names
@@ -498,7 +514,10 @@ allignment_gl <- function(UTR_list,start=1){
 
   return(list(alignment_scores_local_UTR=alignment_scores_local_UTR,alignment_scores_global_UTR=alignment_scores_global_UTR,
               alignment_results_local_UTR=alignment_results_local_UTR,alignment_results_global_UTR=alignment_results_global_UTR,
-              lev_distance_matrix_UTR=lev_distance_matrix_UTR,lev_distance_percentage_matrix_UTR=lev_distance_percentage_matrix_UTR))
+              lev_distance_matrix_UTR_global=lev_distance_matrix_UTR_global,
+              lev_distance_percentage_matrix_UTR_global=lev_distance_percentage_matrix_UTR_global,
+              lev_distance_matrix_UTR_local=lev_distance_matrix_UTR_local,
+              lev_distance_percentage_matrix_UTR_local=lev_distance_percentage_matrix_UTR_local))
 
 }
 
@@ -508,7 +527,7 @@ threeUTR_allignment <- allignment_gl(UTR_list =list_gt3_UTR,start=1) # change st
 
 # alvinovirus is too short. it was ignored for allignment. We remove its rows and coloumns to remove NAs
 #threeUTR_allignment[["alignment_scores_global_UTR"]] <- threeUTR_allignment[["alignment_scores_global_UTR"]][-1, -1]                          # !!!!!!! remove for future virus-data.
-#threeUTR_allignment[["alignment_scores_local_UTR"]]<- threeUTR_allignment[["alignment_scores_local_UTR"]][-1, -1]                            # !!!!!!! remove for future virus-data.
+#threeUTR_allignment[["alignment_scores_local_UTR"]]<- threeUTR_allignment[["alignment_scores_local_UTR"]][-1, -1]
 
 ###################### ######################
 # Export Allignment and Levenstein_matrices #
@@ -524,28 +543,28 @@ if (!dir.exists(scores_path)) {
 
 
 # Write the matrix to a CSV file
-write.csv(threeUTR_allignment[["alignment_scores_local_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_3UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_matrix_UTR_global"]], file = paste0(folder_path_,"/allignmentscores/","threeUTR_global_lev_distance_matrix.csv"))
 
 # Write the matrix to a CSV file
-write.csv(threeUTR_allignment[["alignment_scores_global_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_3UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR_global"]], file = paste0(folder_path_,"/allignmentscores/","threeUTR_global_percentage_lev_distance_matrix.csv"))
 
 # Write the matrix to a CSV file
-write.csv(fiveUTR_allignment[["alignment_scores_local_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_local_5UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_matrix_UTR_local"]], file = paste0(folder_path_,"/allignmentscores/","threeUTR_local_lev_distance_matrix.csv"))
 # Write the matrix to a CSV file
-write.csv(fiveUTR_allignment[["alignment_scores_global_UTR"]], file = paste0(folder_path_,"/allignmentscores/","alignment_scores_global_5UTR.csv"))
+write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]], file = paste0(folder_path_,"/allignmentscores/","threeUTR_local_percentage_lev_distance_matrix.csv"))
 
 ### Lvenstein
 
 # Write the matrix to a CSV file
-write.csv(fiveUTR_allignment[["lev_distance_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_5UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_matrix_UTR_global"]], file = paste0(folder_path_,"/allignmentscores/","fiveUTR_global_lev_distance_matrix.csv"))
 
 # Write the matrix to a CSV file
-write.csv(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_5UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_global"]], file = paste0(folder_path_,"/allignmentscores/","fiveUTR_global_percentage_lev_distance_matrix.csv"))
 
 # Write the matrix to a CSV file
-write.csv(threeUTR_allignment[["lev_distance_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_matrix_3UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_matrix_UTR_local"]], file = paste0(folder_path_,"/allignmentscores/","fiveUTR_local_lev_distance_matrix.csv"))
 # Write the matrix to a CSV file
-write.csv(threeUTR_allignment[["lev_distance_percentage_matrix_UTR"]], file = paste0(folder_path_,"/allignmentscores/","lev_distance_percentage_matrix_3UTR.csv"))
+write.csv(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]], file = paste0(folder_path_,"/allignmentscores/","fiveUTR_local_percentage_lev_distance_matrix.csv"))
 
 gc()  # Trigger garbage collection to release memory
 
@@ -559,9 +578,13 @@ setwd(scores_path)
 utr_nj <- function(matrix,filename,test){
 
 
-  distance_matrix <- as.matrix(dist(matrix))
+  distance_matrix <- as.dist(matrix)
 
   njtree <- nj(distance_matrix)
+
+  #set midpoint.root
+  njtree <- midpoint.root(njtree)
+
 
   #plot results.
   png(filename, width = 800, height = 600)
@@ -592,46 +615,91 @@ tanglegram_plot <- function(x,y,all_x,all_y,filename){
     stop("all_x and all_y must be character vectors.")
   }
 
-  tangleplot<- cophylo(x,y)
+  tiplabel1<- x$tip.label
+  tiplabel2<- y$tip.label
+
+  tiplabel1_<- sub(">[35]_UTR_of_", "", tiplabel1)
+  tiplabel2_<- sub(">[35]_UTR_of_", "", tiplabel2)
+
+  association_matrix <- matrix(0,nrow=length(tiplabel1),ncol=2)
+
+  for (i in 1:length(tiplabel1)) {
+    taxon1 <- tiplabel1[i]
+    taxon1_ <- tiplabel1_[i]
+
+    # Find corresponding taxon in tiplabel2_ with the same identifier
+    matching_indices <- which(tiplabel2_ == taxon1_)
+
+    if (length(matching_indices) > 0) {
+      corresponding_taxon <- tiplabel2[matching_indices[1]]  # Take the first match
+      association_matrix[i, 1] <- taxon1
+      association_matrix[i, 2] <- corresponding_taxon
+    }
+  }
+
+  # Print the association_matrix
+  print(association_matrix)
+
+
+  tangleplot<- cophylo(x,y,assoc=association_matrix)
 
   #plot results.
-  png(filename, width = 1920, height = 1080)
+  png(filename, width = 800, height = 600)
 
   # Create a larger plot area
   par(mar = c(8, 4, 4, 2) + 0.1)
   plot(tangleplot)
   title(main = paste("tangleplot for",all_x,"and",all_y))
+
+
   dev.off()
 }
 
-
 # Call the function with allignment matrix
-tree_3_global <- utr_nj(threeUTR_allignment[["alignment_scores_global_UTR"]],filename="threeUTR_njtree_global.png",test="Global Alignment of 3´-UTR")
+tree_3_global <- utr_nj(threeUTR_allignment[["lev_distance_percentage_matrix_UTR_global"]],filename="threeUTR_njtree_global.png",test="Global Alignment of 3´-UTR")
 
-tree_5_global <- utr_nj(fiveUTR_allignment[["alignment_scores_global_UTR"]],filename="fiveUTR_njtree_globa.png",test="Global Alignment of 5´-UTR")
+tree_5_global <- utr_nj(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_global"]],filename="fiveUTR_njtree_global.png",test="Global Alignment of 5´-UTR")
 
 # call the function for local
-tree_3_local <- utr_nj(threeUTR_allignment[["alignment_scores_local_UTR"]],filename="threeUTR_njtree_local.png",test="Local Alignment of 3´-UTR")
+tree_3_local <- utr_nj(threeUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]],filename="threeUTR_njtree_local.png",test="Local Alignment of 3´-UTR")
 
-tree_5_local <- utr_nj(fiveUTR_allignment[["alignment_scores_local_UTR"]],filename="fiveUTR_njtree_local.png",test="Local Alignment of 5´-UTR")
+tree_5_local <- utr_nj(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]],filename="fiveUTR_njtree_local.png",test="Local Alignment of 5´-UTR")
 
-#call the function for levenstein
-tree_3_leven <- utr_nj(threeUTR_allignment[["lev_distance_matrix_UTR"]],filename="threeUTR_njtree_leven.png",test="Levenstein results for 3´-UTR")
-
-tree_5_leven <- utr_nj(fiveUTR_allignment[["lev_distance_matrix_UTR"]],filename="fiveUTR_njtree_leven.png",test="Levenstein results for 5´-UTR")
 
 
 # call functions to creat tangleplots.
-tanglegram_plot(tree_3_global,tree_3_local,all_x = "3´-UTR Global",all_y = "3´-UTR-local",filename="tangle_3UTR-Global-local.png")
-tanglegram_plot(tree_3_global,tree_3_leven,all_x = "3´-UTR Global",all_y = "3´-UTR-leven",filename="tangle_3UTR-Global-leven.png")
-tanglegram_plot(tree_3_local,tree_3_leven,all_x = "3´-UTR local",all_y = "3´-UTR-leven",filename="tangle_3UTR-local-leven.png")
+tanglegram_plot(tree_5_global,tree_5_local ,all_x = "5´-UTR Global",all_y = "5´-UTR-local",filename="tangle_5UTR-Global-5local.png")
+tanglegram_plot(tree_3_global,tree_3_local,all_x = "3´-UTR Global",all_y = "3´-UTR-local",filename="tangle_3UTR-Global-3local.png")
 
-tanglegram_plot(tree_5_global ,tree_5_local,all_x = "5´-UTR Global",all_y = "5´-UTR-local",filename="tangle_5UTR-Global-local.png")
-tanglegram_plot(tree_5_global,tree_5_leven,all_x = "5´-UTR Global",all_y = "5´-UTR-leven",filename="tangle_5UTR-Global-leven.png")
-tanglegram_plot(tree_5_local,tree_5_leven,all_x = "5´-UTR local",all_y = "5´-UTR-leven",filename="tangle_5UTR-local-leven.png")
+
+#tanglegram_plot(tree_5_global,tree_3_global,all_x = "5´-UTR Global",all_y = "3´-UTR-global",filename="tangle_5UTR-Global-3global.png")
+#tanglegram_plot(tree_5_global,tree_3_local,all_x = "5´-UTR Global",all_y = "3´-UTR-local",filename="tangle_5UTR-global-3local.png")
+#tanglegram_plot(tree_3_local,tree_5_local,all_x = "5´-UTR Local",all_y = "3´-UTR-local",filename="tangle_5UTR-local-3local.png")
+#tanglegram_plot(tree_3_global,tree_5_local,all_x = "3´-UTR Global",all_y = "5´-UTR-local",filename="tangle_3UTR-Global-5local.png")
 
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
 
 #Robinson–Foulds metric
-dist.dendlist(dendlist(tree_3_global,tree_3_local)) #error Error in ape::as.hclust.phylo(object) : the tree is not ultrametric
+#dist.dendlist(dendlist(tree_3_global,tree_3_local)) #error Error in ape::as.hclust.phylo(object) : the tree is not ultrametric
+# ultrametric tree is one where all leaves (objects or observations) are at the same height or distance from the root of the tree
+
+# show entire sequence using toString
+print(toString(pattern( fiveUTR_allignment[["alignment_results_local_UTR"]][["alignment_>5_UTR_of_NC_015668.1_>5_UTR_of_NC_015874.1"]])))
+
+
+# function to calculate the Robinson-Foulds (RF) distance between two trees
+calculate_rf_distance <- function(tree1, tree2) {
+  if (!is(tree1, "phylo") || !is(tree2, "phylo")) {
+    stop("Input tree1 and tree2 must be valid phylogenetic trees.")
+  }
+  return(RF.dist(tree1, tree2))
+}
+
+# Calculate RF distances for your trees
+rf_distance_5_global_local <- calculate_rf_distance(tree_5_global, tree_5_local)
+rf_distance_3_global_local <- calculate_rf_distance(tree_3_global, tree_3_local)
+
+# Print RF distances
+cat("RF Distance between 5´-UTR Global and 5´-UTR Local:", rf_distance_5_global_local, "\n")
+cat("RF Distance between 3´-UTR Global and 3´-UTR Local:", rf_distance_3_global_local, "\n")
