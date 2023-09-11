@@ -643,20 +643,23 @@ tanglegram_plot(tree_5_global,protein_sequences ,all_x = "5´-UTR Global",all_y 
 tanglegram_plot(tree_3_global,protein_sequences,all_x = "3´-UTR Global",all_y = "Proteinsequences",filename="tangle_3UTR-Global-Protein.png")
 
 
-#tanglegram_plot(tree_5_global,tree_3_global,all_x = "5´-UTR Global",all_y = "3´-UTR-global",filename="tangle_5UTR-Global-3global.png")
-#tanglegram_plot(tree_5_global,tree_3_local,all_x = "5´-UTR Global",all_y = "3´-UTR-local",filename="tangle_5UTR-global-3local.png")
-#tanglegram_plot(tree_3_local,tree_5_local,all_x = "5´-UTR Local",all_y = "3´-UTR-local",filename="tangle_5UTR-local-3local.png")
-#tanglegram_plot(tree_3_global,tree_5_local,all_x = "3´-UTR Global",all_y = "5´-UTR-local",filename="tangle_3UTR-Global-5local.png")
 
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
 
-#Robinson–Foulds metric
-#dist.dendlist(dendlist(tree_3_global,tree_3_local)) #error Error in ape::as.hclust.phylo(object) : the tree is not ultrametric
-# ultrametric tree is one where all leaves (objects or observations) are at the same height or distance from the root of the tree
 
-# show entire sequence using toString
-print(toString(pattern( fiveUTR_allignment[["alignment_results_local_UTR"]][["alignment_>5_UTR_of_NC_015668.1_>5_UTR_of_NC_015874.1"]])))
+
+
+
+# Update tip labels
+tree_5_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_5_global$tip.label)
+
+# Update tip labels
+tree_3_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_3_global$tip.label)
+
+# Update tip labels
+protein_sequences$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", protein_sequences$tip.label)
+
 
 
 # function to calculate the Robinson-Foulds (RF) distance between two trees
@@ -664,13 +667,14 @@ calculate_rf_distance <- function(tree1, tree2) {
   if (!is(tree1, "phylo") || !is(tree2, "phylo")) {
     stop("Input tree1 and tree2 must be valid phylogenetic trees.")
   }
-  return(RF.dist(tree1, tree2))
+  return(RobinsonFoulds(tree1, tree2))
 }
 
 # Calculate RF distances for your trees
-rf_distance_5_global_local <- calculate_rf_distance(tree_5_global, tree_5_local)
-rf_distance_3_global_local <- calculate_rf_distance(tree_3_global, tree_3_local)
+rf_distance_5_global_local <- calculate_rf_distance(tree_5_global, protein_sequences)
+rf_distance_3_global_local <- calculate_rf_distance(tree_3_global, protein_sequences)
 
 # Print RF distances
 cat("RF Distance between 5´-UTR Global and 5´-UTR Local:", rf_distance_5_global_local, "\n")
 cat("RF Distance between 3´-UTR Global and 3´-UTR Local:", rf_distance_3_global_local, "\n")
+
