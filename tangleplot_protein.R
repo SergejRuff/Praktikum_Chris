@@ -644,12 +644,6 @@ tanglegram_plot(tree_3_global,protein_sequences,all_x = "3´-UTR Global",all_y =
 
 
 
-# Set path back to the code directory
-setwd("A:/Praktikum_Chris/R/code")
-
-
-
-
 
 # Update tip labels
 tree_5_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_5_global$tip.label)
@@ -685,12 +679,33 @@ distance_df <- data.frame(
 )
 
 
-distance_df%>% gt()%>%
+
+
+# Create a gt table
+table_Robinson <- gt(distance_df)
+
+# Change column labels
+table_Robinson <- table_Robinson %>%
+  cols_label(
+    rf_distance_5_global_protein = "5´-UTR and Protein",
+    rf_distance_3_global_protein = "3´-UTR and Protein"
+  )
+
+# Add table header
+table_Robinson <- table_Robinson %>%
   tab_header(
     title = "Distance between UTRs and Protein",
     subtitle = "Comparison of 5´UTR and 3´UTR with Protein"
-  )%>% cols_label(
-    rf_distance_5_global_protein="5´-UTR and Protein",
-    rf_distance_3_global_protein="3´-UTR and Protein"
+  )%>%
+  tab_source_note(
+    source_note = "value represents the number of bipartitions (splits) that differ between two phylogenetic trees.A smaller RF distance implies a higher degree of similarity."
+
   )
 
+print(table_Robinson)
+
+# Save the modified table with the title and column labels to a PDF
+gtsave(table_Robinson, filename = "table_Robinson.pdf")
+
+# Set path back to the code directory
+setwd("A:/Praktikum_Chris/R/code")
