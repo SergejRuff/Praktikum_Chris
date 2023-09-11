@@ -671,10 +671,26 @@ calculate_rf_distance <- function(tree1, tree2) {
 }
 
 # Calculate RF distances for your trees
-rf_distance_5_global_local <- calculate_rf_distance(tree_5_global, protein_sequences)
-rf_distance_3_global_local <- calculate_rf_distance(tree_3_global, protein_sequences)
+rf_distance_5_global_protein <- calculate_rf_distance(tree_5_global, protein_sequences)
+rf_distance_3_global_protein <- calculate_rf_distance(tree_3_global, protein_sequences)
 
 # Print RF distances
-cat("RF Distance between 5´-UTR Global and 5´-UTR Local:", rf_distance_5_global_local, "\n")
-cat("RF Distance between 3´-UTR Global and 3´-UTR Local:", rf_distance_3_global_local, "\n")
+cat("RF Distance between 5´-UTR Global and Protein sequence:", rf_distance_5_global_protein , "\n")
+cat("RF Distance between 3´-UTR Global and Protein sequence:", rf_distance_3_global_protein , "\n")
+
+
+distance_df <- data.frame(
+  rf_distance_5_global_protein,
+  rf_distance_3_global_protein
+)
+
+
+distance_df%>% gt()%>%
+  tab_header(
+    title = "Distance between UTRs and Protein",
+    subtitle = "Comparison of 5´UTR and 3´UTR with Protein"
+  )%>% cols_label(
+    rf_distance_5_global_protein="5´-UTR and Protein",
+    rf_distance_3_global_protein="3´-UTR and Protein"
+  )
 
