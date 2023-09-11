@@ -138,7 +138,7 @@ for (i in 1:length(sequences)){
   # exprort for each virus in individual folders and than collect each fasta file in one folder.
   # Meaning fasta files are exported twice.
 
-  folder_name <- paste0("polya_fasta_files_",current_date)
+  folder_name <- paste0("fasta_files_",current_date)
   folder_path_ <- file.path(basedirectory, folder_name)
 
   if (!dir.exists(folder_path_)) {
@@ -149,21 +149,17 @@ for (i in 1:length(sequences)){
 
 
 
-  if (has_poly_a) {
-
-    if (!dir.exists(folder_path)) {
-      dir.create(folder_path, recursive = TRUE)
-    }
-
-    setwd(folder_path) # save all fasta files and position-info in each folder per virus.
-
-    write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
-
-    write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
-
-    gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
-
+  if (!dir.exists(folder_path)) {
+    dir.create(folder_path, recursive = TRUE)
   }
+
+  setwd(folder_path) # save all fasta files and position-info in each folder per virus.
+
+  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+
+  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
+
+  gtsave(data=table,filename = paste("table_",NameofTaxon,".pdf"))
 
 
 
@@ -176,16 +172,11 @@ for (i in 1:length(sequences)){
 
   setwd(folder_path2)
 
-  if (has_poly_a){
-    # save all fasta files in one folder called Alle_Fastafiles
+  # save all fasta files in one folder called Alle_Fastafiles
 
-    write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
+  write.fasta(five_UTR,names=paste0("5_UTR_of_",NameofTaxon),file.out = paste0("5_URT_",NameofTaxon,current_date,".fasta"))
 
-    write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
-
-
-  }
-
+  write.fasta(three_UTR,names=paste0("3_UTR_of_",NameofTaxon),file.out = paste0("3_URT_",NameofTaxon,current_date,".fasta"))
   setwd("A:/Praktikum_Chris/R/code")
 
 
@@ -548,6 +539,9 @@ gc()  # Trigger garbage collection to release memory
 # Perfom Neighbor Joining #
 ###########################
 
+protein_sequences <- read.tree(
+  file="A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_refseq_trimmed.phy_phyml_SH_tree_annotated_rooted.nwk")
+
 setwd(scores_path)
 
 utr_nj <- function(matrix,filename,test){
@@ -590,27 +584,35 @@ tanglegram_plot <- function(x,y,all_x,all_y,filename){
     stop("all_x and all_y must be character vectors.")
   }
 
+  pattern <- "NC_[[:alnum:]_]{6}"
+
   tiplabel1<- x$tip.label
   tiplabel2<- y$tip.label
 
-  tiplabel1_<- sub(">[35]_UTR_of_", "", tiplabel1)
-  tiplabel2_<- sub(">[35]_UTR_of_", "", tiplabel2)
+
+
 
   association_matrix <- matrix(0,nrow=length(tiplabel1),ncol=2)
 
+  # Iterate through tiplabel1 and find matches in tiplabel2
   for (i in 1:length(tiplabel1)) {
-    taxon1 <- tiplabel1[i]
-    taxon1_ <- tiplabel1_[i]
+    # Check if tiplabel1[i] matches the pattern
+    if (grepl(pattern, tiplabel1[i])) {
+      # Extract the NC_number from tiplabel1
+      nc_number1 <- sub(".*NC_([[:alnum:]_]{6}).*", "\\1", tiplabel1[i])
 
-    # Find corresponding taxon in tiplabel2_ with the same identifier
-    matching_indices <- which(tiplabel2_ == taxon1_)
+      # Find matching elements in tiplabel2 based on the NC_number
+      matching_indices <- which(grepl(paste0("NC_", nc_number1), tiplabel2))
 
-    if (length(matching_indices) > 0) {
-      corresponding_taxon <- tiplabel2[matching_indices[1]]  # Take the first match
-      association_matrix[i, 1] <- taxon1
-      association_matrix[i, 2] <- corresponding_taxon
+      # Check if there are matching elements in tiplabel2
+      if (length(matching_indices) > 0) {
+        matching_tip2 <- tiplabel2[matching_indices]
+        association_matrix[i, 1] <- tiplabel1[i]
+        association_matrix[i, 2] <- matching_tip2
+      }
     }
   }
+
 
   # Print the association_matrix
   print(association_matrix)
@@ -635,16 +637,10 @@ tree_3_global <- utr_nj(threeUTR_allignment[["lev_distance_percentage_matrix_UTR
 
 tree_5_global <- utr_nj(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_global"]],filename="fiveUTR_njtree_global.png",test="Global Alignment of 5´-UTR")
 
-# call the function for local
-tree_3_local <- utr_nj(threeUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]],filename="threeUTR_njtree_local.png",test="Local Alignment of 3´-UTR")
-
-tree_5_local <- utr_nj(fiveUTR_allignment[["lev_distance_percentage_matrix_UTR_local"]],filename="fiveUTR_njtree_local.png",test="Local Alignment of 5´-UTR")
-
-
 
 # call functions to creat tangleplots.
-tanglegram_plot(tree_5_global,tree_5_local ,all_x = "5´-UTR Global",all_y = "5´-UTR-local",filename="tangle_5UTR-Global-5local.png")
-tanglegram_plot(tree_3_global,tree_3_local,all_x = "3´-UTR Global",all_y = "3´-UTR-local",filename="tangle_3UTR-Global-3local.png")
+tanglegram_plot(tree_5_global,protein_sequences ,all_x = "5´-UTR Global",all_y = "Proteinsequences",filename="tangle_5UTR-Global-Protein.png")
+tanglegram_plot(tree_3_global,protein_sequences,all_x = "3´-UTR Global",all_y = "Proteinsequences",filename="tangle_3UTR-Global-Protein.png")
 
 
 #tanglegram_plot(tree_5_global,tree_3_global,all_x = "5´-UTR Global",all_y = "3´-UTR-global",filename="tangle_5UTR-Global-3global.png")
