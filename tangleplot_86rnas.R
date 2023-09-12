@@ -233,34 +233,57 @@ for (i in 1:length(fasta_files)){
 
 # Export as CT-file
 
-# Create a new folder called CT_Fold_Ergebnisse and save all CT files in that folder.
+# Initialize a counter for sequences with length 4 or less
+sequences_with_length_5_or_less <- 0
+
+# Create a vector to store the names of sequences with length 4 or less
+short_sequences <- c()
+
+# Create a new folder called CT_Fold_Ergebnisse and save filtered CT files in that folder.
 for (i in 1:length(results_list)) {
 
-  # Create a CT-results folder if not already created
-  CT_folder <- "CT_Fold_Ergebnisse"
-  cT_path <- file.path(folder_path_, CT_folder)
+  # Extract the sequence from results_list
+  sequence <- results_list[[i]][1,]
 
-  if (!dir.exists(cT_path)) {
-    dir.create(cT_path, recursive = TRUE)
-  }
+  # Check if the sequence is not missing or empty
+  if (!is.na(sequence) && nchar(sequence) > 0) {
+    sequence_length <- nchar(sequence)
 
-  # Extract the name of the virus from results_list
-  virus_nam <- names(results_list)[i]
+    # Check if the sequence length is 4 or less
+    if (sequence_length <= 5) {
+      sequences_with_length_5_or_less <- sequences_with_length_5_or_less + 1
+      short_sequences <- c(short_sequences, names(results_list)[i])  # Add the name to the vector
+    } else {
+      # Create a CT-results folder if not already created
+      CT_folder <- "CT_Fold_Ergebnisse"
+      cT_path <- file.path(folder_path_, CT_folder)
 
-  # Remove ">" otherwise the file can't be created
-  virus_nam <- sub("^>", "", virus_nam)
-  CT_name <- paste0(cT_path, "/", virus_nam, ".ct")
+      if (!dir.exists(cT_path)) {
+        dir.create(cT_path, recursive = TRUE)
+      }
 
-  # Check if the secondary structure is in the basic Dot-Bracket notation
-  secondary_structure <- results_list[[i]][2,]
-  if (!grepl("^[.()]+$", secondary_structure)) {
-    cat("Error: Invalid secondary structure notation for virus", virus_nam, "\n")
-  } else {
-    # Save files as Connectivity table format using ncRNAtools' writeCT function
-    writeCT(filename = CT_name, sequence = results_list[[i]][1,], secondaryStructure = secondary_structure, sequenceName = virus_nam)
+      # Extract the name of the virus from results_list
+      virus_nam <- names(results_list)[i]
+
+      # Remove ">" otherwise the file can't be created
+      virus_nam <- sub("^>", "", virus_nam)
+      CT_name <- paste0(cT_path, "/", virus_nam, ".ct")
+
+      # Check if the secondary structure is in the basic Dot-Bracket notation
+      secondary_structure <- results_list[[i]][2,]
+      if (!grepl("^[.()]+$", secondary_structure)) {
+        cat("Error: Invalid secondary structure notation for virus", virus_nam, "\n")
+      } else {
+        # Save files as Connectivity table format using ncRNAtools' writeCT function
+        writeCT(filename = CT_name, sequence = sequence, secondaryStructure = secondary_structure, sequenceName = virus_nam)
+      }
+    }
   }
 }
 
+# Print the count of sequences with length 4 or less and their names
+cat("Number of sequences with length 5 or less:", sequences_with_length_5_or_less, "\n")
+cat("Names of sequences with length 5 or less:", paste(short_sequences, collapse = ", "), "\n")
 
 
 #####################################
@@ -410,7 +433,20 @@ setwd("A:/Praktikum_Chris/R/code")
 list_gt3_UTR <- list()
 list_lt5_UTR <- list()
 
+# Loop through results_list and remove sequences with length 5 or less
+i <- 1
+while (i <= length(results_list)) {
+  # Extract the sequence from results_list
+  sequence <- results_list[[i]][1,]
 
+  # Check if the sequence is not missing or empty and has length greater than 5
+  if (!is.na(sequence) && nchar(sequence) > 5) {
+    i <- i + 1  # Move to the next sequence
+  } else {
+    # Remove the sequence from results_list
+    results_list <- results_list[-i]
+  }
+}
 
 for(i in 1:length(results_list)){
   if (grepl("^>3_UTR", names(results_list)[i])) {
