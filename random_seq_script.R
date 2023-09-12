@@ -1,7 +1,7 @@
 # clean global enviroment
 rm(list=ls())
 
-set.seed(666)
+set.seed(669)
 
 ###########
 # packages
@@ -225,7 +225,7 @@ tanglegram_plot <- function(x,y,all_x,all_y,filename){
 
 
   # Print the association_matrix
-  print(association_matrix)
+  #print(association_matrix)
 
 
   tangleplot<- cophylo(x,y,assoc=association_matrix)
@@ -264,6 +264,8 @@ if (!dir.exists(folder_path1)) {
 ###############################
 
 for (k in 1:range){
+
+  print(paste("run number:",k))
 
   for (i in 1:length(sequences)){
 
@@ -307,13 +309,31 @@ for (k in 1:range){
 
     three_UTR <- toupper(three_UTR)
 
+    three_UTR_ <- three_UTR
+    five_UTR_ <- five_UTR
 
-    five_UTR <- stri_rand_shuffle(five_UTR)
 
-    three_UTR <- stri_rand_shuffle(three_UTR)
+    # Convert the string to a character vector
+    five_UTR <- unlist(strsplit(five_UTR, ""))
 
-    print(paste("random 5_UTR and og 5UTR are identical?",identical(five_UTR,seq)))
-    print(paste("random 3_UTR and og 3UTR are identical?",identical(three_UTR,seq)))
+    # Shuffle the character vector
+    five_UTR <- sample(five_UTR)
+
+    # Convert the shuffled character vector back to a string
+    five_UTR <- paste(five_UTR, collapse = "")
+
+    # Convert the string to a character vector
+    three_UTR <- unlist(strsplit(three_UTR, ""))
+
+    # Shuffle the character vector
+    three_UTR <- sample(three_UTR)
+
+    # Convert the shuffled character vector back to a string
+    three_UTR <- paste(three_UTR, collapse = "")
+
+
+    print(paste("random 5_UTR and og 5UTR are identical?",identical(five_UTR,five_UTR_)))
+    print(paste("random 3_UTR and og 3UTR are identical?",identical(three_UTR,three_UTR_)))
 
 
 
@@ -519,8 +539,8 @@ for (k in 1:range){
   rf_distance_3_global_protein <- calculate_rf_distance(tree_3_global, protein_sequences)
 
   # Print RF distances
-  cat("RF Distance between 5´-UTR Global and Protein sequence:", rf_distance_5_global_protein , "\n")
-  cat("RF Distance between 3´-UTR Global and Protein sequence:", rf_distance_3_global_protein , "\n")
+  #cat("RF Distance between 5´-UTR Global and Protein sequence:", rf_distance_5_global_protein , "\n")
+  #cat("RF Distance between 3´-UTR Global and Protein sequence:", rf_distance_3_global_protein , "\n")
 
 
   distance_df <- data.frame(
@@ -552,7 +572,7 @@ for (k in 1:range){
 
     )
 
-  print(table_Robinson)
+  #print(table_Robinson)
 
   # Save the modified table with the title and column labels to a PDF
   gtsave(table_Robinson, filename = "table_Robinson.pdf")
