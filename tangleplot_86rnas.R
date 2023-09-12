@@ -76,19 +76,20 @@ for (i in 1:length(sequences)){
   # get name of taxa
   NameofTaxon <- getName(sequence_)
 
+
   # find the ORFs in + direction with length of 300 or more. Using ORFik-package
-  orfs<- findORFs(seq, minimumLength = 98,startCodon = "ATG")      # !!!!!!!! might need to change length later. 248 for 750
+  orf_df<- find_orfs(seq,max.only = FALSE)      # !!!!!!!! might need to change length later. 248 for 750
   # !!!! Startcodon changes results. Default uses alternative codons as well.
 
+  # Filter rows based on the length of the 'ORF.Len' column
+  orf_df <- orf_df[orf_df$ORF.Len >= 300, ]
 
-  # Convert the Data to a data frame
-  orf_df <- as.data.frame(orfs@unlistData)
 
   # extract last position of 5´-UTR
-  firstposition <- min(orf_df$start)-1
+  firstposition <- min(orf_df$ORF.Start)-1
 
   # extract first position of 3´-UTR
-  lastposition <- max(orf_df$end)+1
+  lastposition <- max(orf_df$ORF.Stop)+1
 
 
   # extract 5´- and 3´-UTR
@@ -232,10 +233,10 @@ for (i in 1:length(fasta_files)){
 
 # Export as CT-file
 
-# creat a new folder called CT_Fold_Ergebnisse and save all CT_Files in that folder.
-for (i in 1:length(results_list)){
+# Create a new folder called CT_Fold_Ergebnisse and save all CT files in that folder.
+for (i in 1:length(results_list)) {
 
-  # creat a CT-results folder if not already created
+  # Create a CT-results folder if not already created
   CT_folder <- "CT_Fold_Ergebnisse"
   cT_path <- file.path(folder_path_, CT_folder)
 
@@ -243,17 +244,23 @@ for (i in 1:length(results_list)){
     dir.create(cT_path, recursive = TRUE)
   }
 
-  # extract name of virus from results_list
-  virus_nam <-names(results_list)[i]
+  # Extract the name of the virus from results_list
+  virus_nam <- names(results_list)[i]
 
-  # remove > otherwise file can´t be created
-  virus_nam <- sub("^>", "", virus_nam )
-  CT_name <- paste0(cT_path,"/",virus_nam,".ct")
+  # Remove ">" otherwise the file can't be created
+  virus_nam <- sub("^>", "", virus_nam)
+  CT_name <- paste0(cT_path, "/", virus_nam, ".ct")
 
-  # save files as Connectivity table format using ncRNAtools´ writeCT-function
-  writeCT(filename=CT_name,sequence=results_list[[i]][1,],secondaryStructure = results_list[[i]][2,],sequenceName = virus_nam)
-
+  # Check if the secondary structure is in the basic Dot-Bracket notation
+  secondary_structure <- results_list[[i]][2,]
+  if (!grepl("^[.()]+$", secondary_structure)) {
+    cat("Error: Invalid secondary structure notation for virus", virus_nam, "\n")
+  } else {
+    # Save files as Connectivity table format using ncRNAtools' writeCT function
+    writeCT(filename = CT_name, sequence = results_list[[i]][1,], secondaryStructure = secondary_structure, sequenceName = virus_nam)
+  }
 }
+
 
 
 #####################################
