@@ -24,6 +24,7 @@ library(dendextend)
 library(phytools)
 library(phangorn)
 library(TreeDist)
+library(stringr)
 
 
 ##########
@@ -608,7 +609,7 @@ utr_nj <- function(matrix,filename,test){
 
 
   #plot results.
-  png(filename, width = 800, height = 600)
+  png(filename, width = 1920, height = 1080)
 
   # Create a larger plot area
   par(mfrow = c(1, 1))
@@ -624,7 +625,7 @@ utr_nj <- function(matrix,filename,test){
 }
 
 
-tanglegram_plot <- function(x, y, all_x, all_y, filename, width = 1200, height = 800, resolution = 300) {
+tanglegram_plot <- function(x, y, all_x, all_y, filename, width = 1920, height = 1080, resolution = 300) {
 
   # Check if x and y are valid phylogenetic trees
   if (!is(x, "phylo") || !is(y, "phylo")) {
