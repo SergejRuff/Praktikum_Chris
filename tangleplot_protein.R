@@ -460,6 +460,9 @@ allignment_gl <- function(UTR_list,start=1){
       subject_global <- toString(subject(alignment_g ))
       pattern_global <- toString(pattern(alignment_g ))
 
+      print(paste("subject:",subject_global))
+      print(paste("pattern:",pattern_global))
+
       # Calculate the Levenshtein distance for global
       lev_distance_global <- stringdist::stringdist(subject_global, pattern_global)
 

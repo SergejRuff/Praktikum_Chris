@@ -501,7 +501,7 @@ allignment_gl <- function(UTR_list,start=1){
   rownames(alignment_scores_global_UTR) <- names(UTR_list)
   colnames(alignment_scores_global_UTR) <- names(UTR_list)
 
-  lev_distance_percentage_matrix_UTR_global[is.na(lev_distance_percentage_matrix_UTR_global)]<-0
+  #lev_distance_percentage_matrix_UTR_global[is.na(lev_distance_percentage_matrix_UTR_global)]<-0
   return(list(alignment_scores_global_UTR=alignment_scores_global_UTR,
               alignment_results_global_UTR=alignment_results_global_UTR,
               lev_distance_matrix_UTR_global=lev_distance_matrix_UTR_global,
