@@ -625,7 +625,7 @@ utr_nj <- function(matrix,filename,test){
 }
 
 
-tanglegram_plot <- function(x, y, all_x, all_y, filename, width = 1920, height = 1080, resolution = 300) {
+tanglegram_plot <- function(x, y, all_x, all_y, filename) {
 
   # Check if x and y are valid phylogenetic trees
   if (!is(x, "phylo") || !is(y, "phylo")) {
@@ -681,7 +681,7 @@ tanglegram_plot <- function(x, y, all_x, all_y, filename, width = 1920, height =
   tangleplot <- cophylo(x, y, assoc = association_matrix)
 
   # Plot results with adjusted parameters
-  png(filename, width = width, height = height, res = resolution)
+  png(filename, width = 1920, height = 1080)
 
   # Create a larger plot area
   par(mar = c(8, 4, 4, 2) + 0.1)
@@ -705,13 +705,13 @@ tanglegram_plot(tree_3_global,protein_sequences,all_x = "3´-UTR Global",all_y =
 
 
 # Update tip labels
-tree_5_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_5_global$tip.label)
+tree_5_global$tip.label <- gsub(">5_UTR_of_", "", tree_5_global$tip.label)
 
 # Update tip labels
-tree_3_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_3_global$tip.label)
+tree_3_global$tip.label <- gsub(">3_UTR_of_", "", tree_3_global$tip.label)
 
 # Update tip labels
-protein_sequences$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", protein_sequences$tip.label)
+protein_sequences$tip.label
 
 
 
