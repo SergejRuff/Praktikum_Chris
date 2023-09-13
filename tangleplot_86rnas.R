@@ -434,28 +434,24 @@ setwd("A:/Praktikum_Chris/R/code")
 list_gt3_UTR <- list()
 list_lt5_UTR <- list()
 
-# Loop through results_list and remove sequences with length 5 or less
-i <- 1
-while (i <= length(results_list)) {
-  # Extract the sequence from results_list
-  sequence <- results_list[[i]][1,]
 
-  # Check if the sequence is not missing or empty and has length greater than 5
+# Filter sequences with length greater than 5
+filtered_results_list <- list()
+
+for (i in 1:length(results_list)) {
+  sequence <- results_list[[i]][1,]
   if (!is.na(sequence) && nchar(sequence) > 5) {
-    i <- i + 1  # Move to the next sequence
-  } else {
-    # Remove the sequence from results_list
-    results_list <- results_list[-i]
+    filtered_results_list[[names(results_list)[i]]] <- results_list[[i]]
   }
 }
 
-for(i in 1:length(results_list)){
-  if (grepl("^>3_UTR", names(results_list)[i])) {
-    list_gt3_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
-  } else if (grepl(">5_UTR", names(results_list)[i])) {
-    list_lt5_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
+# Separate sequences into list_gt3_UTR and list_lt5_UTR
+for (i in 1:length(filtered_results_list)) {
+  if (grepl("^>3_UTR", names(filtered_results_list)[i])) {
+    list_gt3_UTR[[names(filtered_results_list)[i]]] <- filtered_results_list[[names(filtered_results_list)[i]]]
+  } else if (grepl(">5_UTR", names(filtered_results_list)[i])) {
+    list_lt5_UTR[[names(filtered_results_list)[i]]] <- filtered_results_list[[names(filtered_results_list)[i]]]
   }
-
 }
 
 allignment_gl <- function(UTR_list,start=1){
@@ -613,7 +609,7 @@ utr_nj <- function(matrix,filename,test){
 
   # Create a larger plot area
   par(mfrow = c(1, 1))
-  plot(njtree,main = paste("njplot for",test), cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = "blue")
+  plot(njtree,main = paste("njplot for",test), cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2,use.edge.length = TRUE)
 
 
 

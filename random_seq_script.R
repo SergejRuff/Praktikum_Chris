@@ -1,7 +1,7 @@
 # clean global enviroment
 rm(list=ls())
 
-set.seed(669)
+set.seed(700) # change before running code.
 
 ###########
 # packages
@@ -37,7 +37,7 @@ current_date <- Sys.Date()
 current_time <- format(Sys.time(), format = "%H-%M-%S")
 current_date <- paste0(current_date,"_",current_time)
 
-range = 3
+range = 100
 
 basedirectory <- "A:/Praktikum_Chris/output" # where should the output be placed. ! Important.
 # All other folders will be generated in basedirectory
@@ -586,3 +586,7 @@ for (k in 1:range){
 
 
 }
+
+setwd(folder_path1)
+write.csv(x=robinsonfould_run_results,"robinson_run_results.csv")
+setwd("A:/Praktikum_Chris/R/code")
