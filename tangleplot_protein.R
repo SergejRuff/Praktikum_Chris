@@ -43,6 +43,12 @@ bash_script_path <- "/mnt/a/Praktikum_Chris/visualise_ct_files_naview.sh"
 
 sequences <- read.fasta(file=fasta_files,as.string=TRUE)
 
+# Define the sequences to remove
+sequences_to_remove <- c("Empoasca_onukii_nidovirus_2", "Parasteatoda_nidovirus_1")
+
+# Remove the specified sequences
+sequences <- sequences[!names(sequences) %in% sequences_to_remove]
+
 all_data <- list()
 
 has_poly_a_tail <- function(sequence) {
@@ -460,8 +466,7 @@ allignment_gl <- function(UTR_list,start=1){
       subject_global <- toString(subject(alignment_g ))
       pattern_global <- toString(pattern(alignment_g ))
 
-      print(paste("subject:",subject_global))
-      print(paste("pattern:",pattern_global))
+
 
       # Calculate the Levenshtein distance for global
       lev_distance_global <- stringdist::stringdist(subject_global, pattern_global)
@@ -712,3 +717,69 @@ gtsave(table_Robinson, filename = "table_Robinson.pdf")
 
 # Set path back to the code directory
 setwd("A:/Praktikum_Chris/R/code")
+
+
+#########################
+# test for significance #
+#########################
+
+# import 100 sample runs.
+
+test <- read.csv("A:/Praktikum_Chris/output/random_files_2023-09-13_08-44-00/robinson_run_results.csv")
+
+five_random <- test[[3]]
+three_random  <- test[[4]]
+
+################################
+# check for normal destribution#
+################################
+
+test1 <- shapiro.test(test[[3]])
+test2 <- shapiro.test(test[[4]])
+
+
+
+message("shapiro-wilk-test for 5_UTR-random runs\n")
+print(test1)
+cat("\n")
+message("shapiro-wilk-test for 3_UTR-random runs\n")
+print(test2)
+cat("\n")
+
+# p> 0.05 -> normal destribution. p<0.05 -> not normaly dest.
+
+####################
+# not normaly dist #
+####################
+
+# Perform the Wilcoxon rank-sum test for 5 utr
+result_5 <- wilcox.test(five_random, y =  rf_distance_5_global_protein)
+
+# Perform the Wilcoxon rank-sum test for 3 utr
+result_3 <- wilcox.test(three_random, y =  rf_distance_3_global_protein)
+
+
+setwd(scores_path)
+# Open a text file for writing
+sink("wilcoxon_test_results.txt")
+
+# Capture and write the result_5 to the file
+cat("Wilcoxon rank sum test with continuity correction\n")
+cat("data: five_random and rf_distance_5_global_protein\n")
+print(result_5)
+cat("\n\n")  # Adding a newline for separation
+
+# Capture and write the result_3 to the file
+cat("Wilcoxon rank sum test with continuity correction\n")
+cat("data: three_random and rf_distance_3_global_protein\n")
+print(result_3)
+
+# Close the file connection
+sink()
+
+# Print a message indicating where the file was saved
+cat("Results exported to wilcoxon_test_results.txt\n")
+
+setwd("A:/Praktikum_Chris/R/code")
+
+
