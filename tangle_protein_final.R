@@ -26,8 +26,6 @@ library(ape)
 library(dendextend)
 library(phytools)
 library(phangorn)
-library(TreeDist)
-library(stringr)
 
 #############
 # Functions #
@@ -174,6 +172,7 @@ allignment_gl <- function(UTR_list,start=1){
 
 }
 
+
 utr_nj <- function(matrix,filename,test){
 
 
@@ -186,11 +185,11 @@ utr_nj <- function(matrix,filename,test){
 
 
   #plot results.
-  png(filename, width = 1920, height = 1080)
+  png(filename, width = 800, height = 600)
 
   # Create a larger plot area
   par(mfrow = c(1, 1))
-  plot(njtree,main = paste("njplot for",test), cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2,use.edge.length = TRUE)
+  plot(njtree,main = paste("njplot for",test), cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = "blue")
 
 
 
@@ -202,7 +201,7 @@ utr_nj <- function(matrix,filename,test){
 }
 
 
-tanglegram_plot <- function(x, y, all_x, all_y, filename) {
+tanglegram_plot <- function(x,y,all_x,all_y,filename){
 
   # Check if x and y are valid phylogenetic trees
   if (!is(x, "phylo") || !is(y, "phylo")) {
@@ -214,56 +213,50 @@ tanglegram_plot <- function(x, y, all_x, all_y, filename) {
     stop("all_x and all_y must be character vectors.")
   }
 
-  pattern <- ">(5|3)_UTR_of_"
+  pattern <- "NC_[[:alnum:]_]{6}"
 
-  tiplabel1 <- x$tip.label
+  tiplabel1<- x$tip.label
+  tiplabel2<- y$tip.label
 
-  tiplabel1 <- tiplabel1[!grepl("segment[2-9]$", tiplabel1)]
 
-  print("Length of tiplabel1:")
-  print(length(tiplabel1))
 
-  tiplabel2 <- y$tip.label
 
-  print("Length of tiplabel2:")
-  print(length(tiplabel2))
-
-  association_matrix <- matrix(0, nrow = length(tiplabel1), ncol = 2)
+  association_matrix <- matrix(0,nrow=length(tiplabel1),ncol=2)
 
   # Iterate through tiplabel1 and find matches in tiplabel2
   for (i in 1:length(tiplabel1)) {
     # Check if tiplabel1[i] matches the pattern
     if (grepl(pattern, tiplabel1[i])) {
       # Extract the NC_number from tiplabel1
-      test_name <- sub(">(5|3)_UTR_of_", "", tiplabel1[i])
+      nc_number1 <- sub(".*NC_([[:alnum:]_]{6}).*", "\\1", tiplabel1[i])
 
       # Find matching elements in tiplabel2 based on the NC_number
-      matching_indices <- which(str_detect(test_name, tiplabel2))
+      matching_indices <- which(grepl(paste0("NC_", nc_number1), tiplabel2))
 
       # Check if there are matching elements in tiplabel2
       if (length(matching_indices) > 0) {
         matching_tip2 <- tiplabel2[matching_indices]
         association_matrix[i, 1] <- tiplabel1[i]
-        association_matrix[i, 2] <- paste(matching_tip2, collapse = ", ")  # Combine matching labels
-      } else {
-        print(paste("No match found for", tiplabel1[i]))
+        association_matrix[i, 2] <- matching_tip2
       }
     }
   }
 
+
   # Print the association_matrix
-  print("Association matrix:")
   print(association_matrix)
 
-  tangleplot <- cophylo(x, y, assoc = association_matrix)
 
-  # Plot results with adjusted parameters
-  png(filename, width = 1920, height = 1080)
+  tangleplot<- cophylo(x,y,assoc=association_matrix)
+
+  #plot results.
+  png(filename, width = 800, height = 600)
 
   # Create a larger plot area
   par(mar = c(8, 4, 4, 2) + 0.1)
-  plot(tangleplot, use.edge.length = TRUE, cex = 0.8)  # Adjust cex for label size
-  title(main = paste("Tangleplot for", all_x, "and", all_y))
+  plot(tangleplot)
+  title(main = paste("tangleplot for",all_x,"and",all_y))
+
 
   dev.off()
 }
@@ -281,7 +274,7 @@ calculate_rf_distance <- function(tree1, tree2) {
 #######################
 
 # provide path to virus raw-data
-fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_n85.fasta"
+fasta_files <- "A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_refseq.fasta"
 
 # find current data and time.
 current_date <- Sys.Date()
@@ -306,6 +299,10 @@ sequences_to_remove <- c("Empoasca_onukii_nidovirus_2", "Parasteatoda_nidovirus_
 # Remove the specified sequences
 sequences <- sequences[!names(sequences) %in% sequences_to_remove]
 
+# read protein tree for comparison with utr-trees.
+protein_sequences <- read.tree(
+  file="A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_refseq_trimmed.phy_phyml_SH_tree_annotated_rooted.nwk")
+
 all_data <- list()
 
 
@@ -317,7 +314,7 @@ all_data <- list()
 # The scripts will check and creat folders in basedirectory if needed.
 
 # creats first folder in basedirectory where all other files are stored for the run.
-folder_name <- paste0("fasta_files_",current_date)
+folder_name <- paste0("protein_rna_comparison_",current_date)
 folder_path_ <- file.path(basedirectory, folder_name)
 
 if (!dir.exists(folder_path_)) {
@@ -355,6 +352,11 @@ if (!dir.exists(scores_path)) {
 }
 
 
+
+
+######
+
+
 for (i in 1:length(sequences)){
 
   ##############
@@ -372,20 +374,19 @@ for (i in 1:length(sequences)){
   # get name of taxa
   NameofTaxon <- getName(sequence_)
 
-
   # find the ORFs in + direction with length of 300 or more. Using ORFik-package
-  orf_df<- find_orfs(seq,max.only = FALSE)      # !!!!!!!! might need to change length later. 248 for 750
+  orfs<- findORFs(seq, minimumLength = 98,startCodon = "ATG")      # !!!!!!!! might need to change length later. 248 for 750
   # !!!! Startcodon changes results. Default uses alternative codons as well.
 
-  # Filter rows based on the length of the 'ORF.Len' column
-  orf_df <- orf_df[orf_df$ORF.Len >= 300, ]
 
+  # Convert the Data to a data frame
+  orf_df <- as.data.frame(orfs@unlistData)
 
   # extract last position of 5´-UTR
-  firstposition <- min(orf_df$ORF.Start)-1
+  firstposition <- min(orf_df$start)-1
 
   # extract first position of 3´-UTR
-  lastposition <- max(orf_df$ORF.Stop)+1
+  lastposition <- max(orf_df$end)+1
 
 
   # extract 5´- and 3´-UTR
@@ -461,6 +462,7 @@ for (i in 1:length(sequences)){
 
 
 
+
   setwd(folder_path2)
 
   # save all fasta files in one folder called Alle_Fastafiles
@@ -516,50 +518,21 @@ for (i in 1:length(fasta_files)){
 
 # Export as CT-file
 
-# Initialize a counter for sequences with length 4 or less
-sequences_with_length_5_or_less <- 0
+# creat a new folder called CT_Fold_Ergebnisse and save all CT_Files in that folder.
+for (i in 1:length(results_list)){
 
-# Create a vector to store the names of sequences with length 4 or less
-short_sequences <- c()
 
-# Create a new folder called CT_Fold_Ergebnisse and save filtered CT files in that folder.
-for (i in 1:length(results_list)) {
+  # extract name of virus from results_list
+  virus_nam <-names(results_list)[i]
 
-  # Extract the sequence from results_list
-  sequence <- results_list[[i]][1,]
+  # remove > otherwise file can´t be created
+  virus_nam <- sub("^>", "", virus_nam )
+  CT_name <- paste0(cT_path,"/",virus_nam,".ct")
 
-  # Check if the sequence is not missing or empty
-  if (!is.na(sequence) && nchar(sequence) > 0) {
-    sequence_length <- nchar(sequence)
+  # save files as Connectivity table format using ncRNAtools´ writeCT-function
+  writeCT(filename=CT_name,sequence=results_list[[i]][1,],secondaryStructure = results_list[[i]][2,],sequenceName = virus_nam)
 
-    # Check if the sequence length is 4 or less
-    if (sequence_length <= 5) {
-      sequences_with_length_5_or_less <- sequences_with_length_5_or_less + 1
-      short_sequences <- c(short_sequences, names(results_list)[i])  # Add the name to the vector
-    } else {
-
-      # Extract the name of the virus from results_list
-      virus_nam <- names(results_list)[i]
-
-      # Remove ">" otherwise the file can't be created
-      virus_nam <- sub("^>", "", virus_nam)
-      CT_name <- paste0(cT_path, "/", virus_nam, ".ct")
-
-      # Check if the secondary structure is in the basic Dot-Bracket notation
-      secondary_structure <- results_list[[i]][2,]
-      if (!grepl("^[.()]+$", secondary_structure)) {
-        cat("Error: Invalid secondary structure notation for virus", virus_nam, "\n")
-      } else {
-        # Save files as Connectivity table format using ncRNAtools' writeCT function
-        writeCT(filename = CT_name, sequence = sequence, secondaryStructure = secondary_structure, sequenceName = virus_nam)
-      }
-    }
-  }
 }
-
-# Print the count of sequences with length 4 or less and their names
-cat("Number of sequences with length 5 or less:", sequences_with_length_5_or_less, "\n")
-cat("Names of sequences with length 5 or less:", paste(short_sequences, collapse = ", "), "\n")
 
 
 #####################################
@@ -601,7 +574,6 @@ system(command)
 # combine all pngs generated by VARNA into one pdf #
 ####################################################
 
-
 setwd(plots_directory)
 
 
@@ -611,6 +583,7 @@ plot_files <- list.files(plots_directory, pattern = "\\.png$", full.names = TRUE
 # Separate plot files into those containing "3_UTR" and "5_UTR"
 utr3_plot_files <- plot_files[grep("3_UTR", plot_files)]
 utr5_plot_files <- plot_files[grep("5_UTR", plot_files)]
+
 
 # Import and plot "3_UTR" images
 imported_plots_utr3 <- import_and_plot(utr3_plot_files)
@@ -643,7 +616,8 @@ gc()  # Trigger garbage collection to release memory
 rm("imported_plots_utr5","imported_plots_utr3","plots_list_utr5","plots_list_utr3")
 gc()  # Trigger garbage collection to release memory
 
-
+# Set path back to the code directory
+setwd(projectdir)
 
 
 ##########################################################
@@ -655,23 +629,14 @@ list_gt3_UTR <- list()
 list_lt5_UTR <- list()
 
 
-# Filter sequences with length greater than 5
-filtered_results_list <- list()
 
-for (i in 1:length(results_list)) {
-  sequence <- results_list[[i]][1,]
-  if (!is.na(sequence) && nchar(sequence) > 5) {
-    filtered_results_list[[names(results_list)[i]]] <- results_list[[i]]
+for(i in 1:length(results_list)){
+  if (grepl("^>3_UTR", names(results_list)[i])) {
+    list_gt3_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
+  } else if (grepl(">5_UTR", names(results_list)[i])) {
+    list_lt5_UTR[[names(results_list)[i]]] <- results_list[[names(results_list)[i]]]
   }
-}
 
-# Separate sequences into list_gt3_UTR and list_lt5_UTR
-for (i in 1:length(filtered_results_list)) {
-  if (grepl("^>3_UTR", names(filtered_results_list)[i])) {
-    list_gt3_UTR[[names(filtered_results_list)[i]]] <- filtered_results_list[[names(filtered_results_list)[i]]]
-  } else if (grepl(">5_UTR", names(filtered_results_list)[i])) {
-    list_lt5_UTR[[names(filtered_results_list)[i]]] <- filtered_results_list[[names(filtered_results_list)[i]]]
-  }
 }
 
 
@@ -686,8 +651,6 @@ threeUTR_allignment <- allignment_gl(UTR_list =list_gt3_UTR,start=1) # change st
 ###################### ######################
 # Export Allignment and Levenstein_matrices #
 #############################################
-
-
 
 
 # Write the matrix to a CSV file
@@ -710,11 +673,7 @@ gc()  # Trigger garbage collection to release memory
 # Perfom Neighbor Joining #
 ###########################
 
-protein_sequences <- read.tree(
-  file="A:/Praktikum_Chris/data/nido_roniviruses_n6_2908/nido_invertebrate_new.nwk")
-
 setwd(scores_path)
-
 
 
 # Call the function with allignment matrix
@@ -731,13 +690,13 @@ tanglegram_plot(tree_3_global,protein_sequences,all_x = "3´-UTR Global",all_y =
 
 
 # Update tip labels
-tree_5_global$tip.label <- gsub(">5_UTR_of_", "", tree_5_global$tip.label)
+tree_5_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_5_global$tip.label)
 
 # Update tip labels
-tree_3_global$tip.label <- gsub(">3_UTR_of_", "", tree_3_global$tip.label)
+tree_3_global$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", tree_3_global$tip.label)
 
 # Update tip labels
-protein_sequences$tip.label
+protein_sequences$tip.label <- sub(".*NC_([[:alnum:]_]{6}).*", "NC_\\1", protein_sequences$tip.label)
 
 
 
@@ -786,3 +745,70 @@ gtsave(table_Robinson, filename = "table_Robinson.pdf")
 
 # Set path back to the code directory
 setwd(projectdir)
+
+
+#########################
+# test for significance #
+#########################
+
+# import 100 sample runs.
+
+test <- read.csv("A:/Praktikum_Chris/output/random_files_2023-09-13_08-44-00/robinson_run_results.csv")
+
+five_random <- test[[3]]
+three_random  <- test[[4]]
+
+################################
+# check for normal destribution#
+################################
+
+test1 <- shapiro.test(test[[3]])
+test2 <- shapiro.test(test[[4]])
+
+
+
+message("shapiro-wilk-test for 5_UTR-random runs\n")
+print(test1)
+cat("\n")
+message("shapiro-wilk-test for 3_UTR-random runs\n")
+print(test2)
+cat("\n")
+
+# p> 0.05 -> normal destribution. p<0.05 -> not normaly dest.
+
+####################
+# not normaly dist #
+####################
+
+# Perform the Wilcoxon rank-sum test for 5 utr
+result_5 <- wilcox.test(five_random, y =  rf_distance_5_global_protein)
+
+# Perform the Wilcoxon rank-sum test for 3 utr
+result_3 <- wilcox.test(three_random, y =  rf_distance_3_global_protein)
+
+
+setwd(scores_path)
+# Open a text file for writing
+sink("wilcoxon_test_results.txt")
+
+# Capture and write the result_5 to the file
+cat("Wilcoxon rank sum test with continuity correction\n")
+cat("data: five_random and rf_distance_5_global_protein\n")
+print(result_5)
+cat("\n\n")  # Adding a newline for separation
+
+# Capture and write the result_3 to the file
+cat("Wilcoxon rank sum test with continuity correction\n")
+cat("data: three_random and rf_distance_3_global_protein\n")
+print(result_3)
+
+# Close the file connection
+sink()
+
+# Print a message indicating where the file was saved
+cat("Results exported to wilcoxon_test_results.txt\n")
+
+setwd(projectdir)
+
+
+
