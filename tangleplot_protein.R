@@ -774,7 +774,7 @@ cat("Wilcoxon rank sum test with continuity correction\n")
 cat("data: three_random and rf_distance_3_global_protein\n")
 print(result_3)
 
-# Close the file connection
+# Close the file connection#
 sink()
 
 # Print a message indicating where the file was saved
