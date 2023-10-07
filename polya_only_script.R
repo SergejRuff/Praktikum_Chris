@@ -678,3 +678,68 @@ rf_distance_3_global_local <- calculate_rf_distance(tree_3_global, tree_3_local)
 # Print RF distances
 cat("RF Distance between 5´-UTR Global and 5´-UTR Local:", rf_distance_5_global_local, "\n")
 cat("RF Distance between 3´-UTR Global and 3´-UTR Local:", rf_distance_3_global_local, "\n")
+
+
+
+# tangleplot function for only the virus-genomes with Poly-a-tails: remove protein sequences which dont match:
+
+tanglegram_plot <- function(x, y, all_x, all_y, filename) {
+
+  # Check if x and y are valid phylogenetic trees
+  if (!is(x, "phylo") || !is(y, "phylo")) {
+    stop("Input x and y must be valid phylogenetic trees.")
+  }
+
+  # Check if all_x and all_y are character vectors
+  if (!is.character(all_x) || !is.character(all_y)) {
+    stop("all_x and all_y must be character vectors.")
+  }
+
+  pattern <- "NC_[[:alnum:]_]{6}"
+
+  tiplabel1 <- x$tip.label
+  tiplabel2 <- y$tip.label
+
+  association_matrix <- matrix(0, nrow = length(tiplabel1), ncol = 2)
+
+  # Iterate through tiplabel1 and find matches in tiplabel2
+  for (i in 1:length(tiplabel1)) {
+    # Check if tiplabel1[i] matches the pattern
+    if (grepl(pattern, tiplabel1[i])) {
+      # Extract the NC_number from tiplabel1
+      nc_number1 <- sub(".*NC_([[:alnum:]_]{6}).*", "\\1", tiplabel1[i])
+
+      # Find matching elements in tiplabel2 based on the NC_number
+      matching_indices <- which(grepl(paste0("NC_", nc_number1), tiplabel2))
+
+      # Check if there are matching elements in tiplabel2
+      if (length(matching_indices) > 0) {
+        matching_tip2 <- tiplabel2[matching_indices]
+        association_matrix[i, 1] <- tiplabel1[i]
+        association_matrix[i, 2] <- matching_tip2
+      }
+    }
+  }
+
+  # Remove rows with no associations
+  association_matrix <- association_matrix[association_matrix[, 2] != 0, ]
+
+  # Prune the tree 'y' to only contain the matching tips
+  y <- drop.tip(y, tip = setdiff(tiplabel2, association_matrix[, 2]))
+
+  # Print the association_matrix
+  print(association_matrix)
+
+  tangleplot <- cophylo(x, y, assoc = association_matrix)
+
+  # plot results.
+  png(filename, width = 800, height = 600)
+
+  # Create a larger plot area
+  par(mar = c(8, 4, 4, 2) + 0.1)
+  plot(tangleplot)
+  title(main = paste("tangleplot for", all_x, "and", all_y))
+
+  dev.off()
+}
+
