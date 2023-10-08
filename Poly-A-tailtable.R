@@ -39,3 +39,13 @@ table <- name_df %>%
     weight=600,style = "italic")
 
 print(table)
+
+###############
+gt(as.data.frame(names(results_list)[c(3,4,20,27,34,37,52,54,58,59,60,61,64,67,75,76,77,78)])) %>%
+  tab_header(title = "UTRs mit Länge kleiner 6",
+             subtitle = md("entfernte Viren aus dem Datensatz der neuentdeckten Viren")) %>%
+  opt_align_table_header(align = "left")%>%
+  tab_options(column_labels.hidden = TRUE)%>%
+  opt_table_font(
+    font= google_font("Monderrat"),
+    weight=600,style = "italic")
