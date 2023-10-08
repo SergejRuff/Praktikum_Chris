@@ -263,7 +263,7 @@ tanglegram_plot <- function(x, y, all_x, all_y, filename) {
   # Create a larger plot area
   par(mar = c(8, 4, 4, 2) + 0.1)
   plot(tangleplot, use.edge.length = TRUE, cex = 0.8)  # Adjust cex for label size
-  title(main = paste("Tangleplot for", all_x, "and", all_y))
+  title(main = paste("tangleplot for", all_x, "and", all_y), line = -1)
 
   dev.off()
 }

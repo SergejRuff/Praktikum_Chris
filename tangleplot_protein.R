@@ -629,12 +629,14 @@ tanglegram_plot <- function(x,y,all_x,all_y,filename){
   tangleplot<- cophylo(x,y,assoc=association_matrix)
 
   #plot results.
-  png(filename, width = 800, height = 600)
+  png(filename, width = 1920, height = 1080)
 
   # Create a larger plot area
-  par(mar = c(8, 4, 4, 2) + 0.1)
-  plot(tangleplot)
-  title(main = paste("tangleplot for",all_x,"and",all_y))
+  par(par(mfrow=c(1,2), mar = c(5, 4, 4, 2) + 0.1))
+  plot(tangleplot, use.edge.length = TRUE, cex = 0.8)
+  title(main = paste("tangleplot for", all_x, "and", all_y), line = -1)
+
+
 
 
   dev.off()
