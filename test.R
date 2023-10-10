@@ -26,9 +26,9 @@ library(TreeDist)
 library(stringr)
 
 
-fasta_files <- list.files(path="A:/Praktikum_Chris/Alle_FASTAFiles86",pattern="*.fasta",full.names = TRUE)
+fasta_files <- list.files(path="A:/Praktikum_Chris/Alle_FASTAFiles",pattern="*.fasta",full.names = TRUE)
 
-cT_path <- "A:/Praktikum_Chris/Alle_FASTAFiles86/Neuer Ordner"
+cT_path <- "A:/Praktikum_Chris/Alle_FASTAFiles/Neuer Ordner"
 
 
 results_list <- list()  # Create an empty list to store the results
